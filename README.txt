@@ -18,7 +18,7 @@ window = graphics.createWindow(width: int, height: int, caption: str, windowflag
 def gameLoop(#muss lehr sein):
   #gameLoop code .....
 
-graphics.startGameLoop(gameLoop, window, caption: str, escapesequence: str oder Tuple[str, ...], framerate: int)
+graphics.startGameLoop(gameLoop, window, caption: str, escapesequence: str oder Tuple[str, ...], framerate: int, refreshrate: int = 1)
 
 ## Functions (for user to use)
 
@@ -48,7 +48,7 @@ drawText(window, pos: vec2, width: int, height: int, text: str, color: Union[rgb
 addButton(button: Button) -> None
 
 createWindow(width: int, height: int, caption: str, window_flags: int) -> pygame.Surface
-startGameLoop(gameLoop: Callable, window, escape_sequence: Union[Tuple[str, ...], str], framerate: int) -> None
+startGameLoop(gameLoop: Callable, window, escape_sequence: Union[Tuple[str, ...], str], framerate: int, refreshrate: int = 1) -> None
 
 ## classes + uses
 

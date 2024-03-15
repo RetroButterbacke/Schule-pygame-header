@@ -424,13 +424,16 @@ def setClearColor(color: rgb) -> None:
     global ClearColor
     ClearColor = color
 
-def startGameLoop(gameLoop: Callable, window: pg.Surface, escape_sequence: Union[Tuple[str, ...], str], framerate: int)-> None:
+def startGameLoop(gameLoop: Callable, window: pg.Surface, escape_sequence: Union[Tuple[str, ...], str], framerate: int, refreshrate: int = 1)-> None:
     global ScrollSpeed
     global Mouse_Moved
     global just_pressed_keys
     global just_pressed_buttons
     global just_released_keys
     global just_released_buttons
+
+    last_update: int = pg.time.get_ticks()
+
     running = True
 
     while running:
@@ -476,25 +479,27 @@ def startGameLoop(gameLoop: Callable, window: pg.Surface, escape_sequence: Union
                 Mouse_Moved = True
             else:
                 Mouse_Moved = False
-                
-        if ScrollSpeed == 0:
-            ScrollDIR["UP"] = False
-            ScrollDIR["DOWN"] = False
 
-        if not running:
-            break
+        if pg.time.get_ticks() - last_update >= refreshrate:
+            last_update = pg.time.get_ticks()
+            if ScrollSpeed == 0:
+                ScrollDIR["UP"] = False
+                ScrollDIR["DOWN"] = False
 
-        window.fill(ClearColor.get())
+            if not running:
+                break
 
-        gameLoop()
+            window.fill(ClearColor.get())
 
-        if drawHitboxes:
-            for button in visual_buttons:
-                button.drawHitbox(window, hitboxColor)
-        
-        if isButtonPressed("LEFT"):
-            for button in visual_buttons:
-                button.onClick(getMousePos())
+            gameLoop()
+
+            if drawHitboxes:
+                for button in visual_buttons:
+                    button.drawHitbox(window, hitboxColor)
+
+            if isButtonPressed("LEFT"):
+                for button in visual_buttons:
+                    button.onClick(getMousePos())
 
         pg.display.flip()
         clock.tick(framerate)
