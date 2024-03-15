@@ -4,8 +4,11 @@ from dataclasses import dataclass
 import pygame as pg, pygame
 from pygame.time import Clock 
 import sys
+import threading
+from math import sqrt
 
 clock = Clock()
+running: bool = False
 
 keys = {
     pygame.K_a: "A",
@@ -143,6 +146,27 @@ class vec2:
 
     def get(self) -> Tuple[int, int]:
         return (self.x, self.y)
+    
+    def __eq__(self, other: 'vec2') -> bool:
+        return self.x == other.x and self.y == other.y
+    
+    def __mul__(self, factor: int) -> 'vec2':
+        return vec2(self.x * factor, self.y * factor)
+    
+    def __mul__(self, other: 'vec2') -> int:
+        return self.x * other.x + self.y * other.y
+    
+    def __add__(self, other: 'vec2') -> 'vec2':
+        return vec2(self.x + other.x, self.y + other.y)
+    
+    def __sub__(self, other: 'vec2') -> 'vec2':
+        return vec2(self.x - other.x, self.y - other.y)
+    
+    def norm(self) -> float:
+        return 1 / sqrt(self.x ** 2, self.y ** 2)
+    
+    def normalized(self) -> 'vec2':
+        return vec2(self * self.norm())
 
 @dataclass
 class rgba:
@@ -167,6 +191,33 @@ class rgb:
 
     def getRGBA(self, alpha: int = 255) -> rgba:
         return rgba(self.red, self.green, self.blue, alpha)
+
+class Timer:
+    def __init__(self, delay: int, task: Callable):
+        self.delay = delay
+        self.task = task
+        self.running = False
+        self.thread = None
+
+    def _run(self):
+        global running
+        last_update: int = pg.time.get_ticks()
+        while self.running and running:
+            current_time = pg.time.get_ticks()
+            if current_time - last_update >= self.delay:
+                last_update = current_time
+                self.task()
+
+    def start(self) -> None:
+        if not self.running:
+            self.running = True
+            self.thread = threading.Thread(target=self._run)
+            self.thread.start()
+
+    def stop(self):
+        if self.running:
+            self.running = False
+            self.thread.join()
 
 class Texture:
     def __init__(self, filePath: str):
@@ -424,24 +475,23 @@ def setClearColor(color: rgb) -> None:
     global ClearColor
     ClearColor = color
 
-def startGameLoop(gameLoop: Callable, window: pg.Surface, escape_sequence: Union[Tuple[str, ...], str], framerate: int, refreshrate: int = 1)-> None:
+def startGameLoop(gameLoop: Callable, window: pg.Surface, escape_sequence: Union[Tuple[str, ...], str], framerate: int)-> None:
     global ScrollSpeed
     global Mouse_Moved
     global just_pressed_keys
     global just_pressed_buttons
     global just_released_keys
     global just_released_buttons
-
-    last_update: int = pg.time.get_ticks()
+    global running
 
     running = True
 
     while running:
+        just_pressed_keys = []
+        just_pressed_buttons = []
+        just_released_keys = []
+        just_released_buttons = []
         for event in pg.event.get():
-            just_pressed_keys = []
-            just_pressed_buttons = []
-            just_released_keys = []
-            just_released_buttons = []
             if event.type == pg.KEYDOWN:
                 if event.key in keys:
                     keys_down[keys[event.key]] = True
@@ -480,29 +530,31 @@ def startGameLoop(gameLoop: Callable, window: pg.Surface, escape_sequence: Union
             else:
                 Mouse_Moved = False
 
-        if pg.time.get_ticks() - last_update >= refreshrate:
-            last_update = pg.time.get_ticks()
-            if ScrollSpeed == 0:
-                ScrollDIR["UP"] = False
-                ScrollDIR["DOWN"] = False
+        if ScrollSpeed == 0:
+            ScrollDIR["UP"] = False
+            ScrollDIR["DOWN"] = False
 
-            if not running:
-                break
+        if not running:
+            break
 
-            window.fill(ClearColor.get())
+        window.fill(ClearColor.get())
+        
+        gameLoop()
 
-            gameLoop()
+        if drawHitboxes:
+            for button in visual_buttons:
+                button.drawHitbox(window, hitboxColor)
 
-            if drawHitboxes:
-                for button in visual_buttons:
-                    button.drawHitbox(window, hitboxColor)
-
-            if isButtonPressed("LEFT"):
-                for button in visual_buttons:
-                    button.onClick(getMousePos())
+        if isButtonPressed("LEFT"):
+            for button in visual_buttons:
+                button.onClick(getMousePos())
 
         pg.display.flip()
         clock.tick(framerate)
 
     pg.quit()
     return
+
+def quit() -> None:
+    global running
+    running = False
