@@ -328,7 +328,7 @@ def drawCircle(window: pg.Surface, pos: vec2, radius: int, color: Union[rgb, rgb
     else:
         window.blit(mask, topleft.get())
 
-def drawTriangle(window: pg.Surface, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texture: Texture = Texture("./test.jpg"), *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: Union[float, int] = 14) -> None:
+def drawTriangle(window: pg.Surface, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texture: Union[None, Texture] = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: Union[float, int] = 14) -> None:
     topleft: vec2 = pos.convert(width, height, "tl")
     mask: pg.Surface = pg.Surface((width, height), depth=16)
     pg.draw.polygon(mask, color.get(), [((width//2) - 2, 0), (0, height - 2), (width - 2, height - 2)], lineDepth)
