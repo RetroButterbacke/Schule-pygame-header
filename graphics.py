@@ -2,6 +2,7 @@ from collections.abc import Callable
 from typing import List, Tuple, Union
 from dataclasses import dataclass
 import pygame as pg, pygame
+from pygame.surface import Surface
 from pygame.time import Clock 
 import sys
 
@@ -352,7 +353,7 @@ def drawTriangle(window: pg.Surface, pos: vec2, width: int, height: int, color: 
     else:
         window.blit(mask, topleft.get())
 
-def drawTexture(window: pg.Surface, pos: vec2, width: int, height: int, texture: Texture, *, rotation: int = 0, transparency: Union[float, int]) -> None:
+def drawTexture(window: pg.Surface, pos: vec2, width: int, height: int, texture: Texture, *, rotation: int = 0) -> None:
     topleft: vec2 = pos.convert(width, height, "tl")
     texture.rotate(rotation)
     window.blit(texture.getScaled(width, height), topleft.get())
@@ -366,10 +367,14 @@ def drawText(window: pg.Surface, pos: vec2, width: int, height: int, text: str, 
     else:
         font = pg.font.Font(None, fontDims[0])
     textSurface: pg.Surface = font.render(text, True, color.get())
-    x = width - fontDims[1]
-    y = height - fontDims[2]
-    textPos: pg.Rect = pg.Rect(topleft.x + x//2, topleft.y + y//2, width - x, height - y)
-    window.blit(textSurface, textPos)
+    x = (width - fontDims[1]) // 2
+    y = (height - fontDims[2]) // 2
+    mask: pg.Surface = pg.Surface((width, height))
+    pg.transform.rotate(mask, -rotation)
+    mask.blit(textSurface, (x, y))
+    mask.set_colorkey((0, 0, 0, 0))
+    textPos: vec2 = vec2(topleft.x + x, topleft.y + y)
+    window.blit(mask, textPos.get())
 
 class Button:
     def __init__(self, width: int, height: int, pos: vec2, label: str, runOnClick: Callable):
@@ -403,10 +408,10 @@ class Button:
         else:
             font = pg.font.Font(None, fontDims[0])
         textSurface: pg.Surface = font.render(self.label, True, fontColor.get())
-        x: int = self.width - fontDims[1]
-        y: int = self.height - fontDims[2]
-        textPos: pg.Rect = pg.Rect(self.x + x//2, self.y + y//2, self.width - x, self.height - y)
-        window.blit(textSurface, textPos)
+        x: int = (self.width - fontDims[1]) // 2
+        y: int = (self.height - fontDims[2]) // 2
+        textPos: vec2 = vec2(self.x + x, self.y + y)
+        window.blit(textSurface, textPos.get())
 
     def drawHitbox(self, window: pg.Surface, color: Union[rgb, rgba] = rgba(150, 0 ,0, 255)) -> None:
         pg.draw.rect(window, color.get(), (self.x, self.y, self.width, self.height), 1)

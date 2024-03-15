@@ -13,6 +13,7 @@ def test():
     g.drawRect(window, g.vec2(35, 35), 70,      70,     g.rgb(0, 150, 0), lineDepth=5)
     g.drawCircle(window, g.vec2(400, 170), 70,     g.rgb(150,0,0), g.Texture("./test.jpg"), scaled=False)
     g.drawTriangle(window, g.vec2(200, 170), 70, 70, g.rgb(0, 0, 150), g.Texture("./test.jpg"))
+    g.drawText(window, g.vec2(250, 30), 100, 50, "Test", g.rgb(150, 0, 0))
 # Initialize Variables
 #                      width  height        x    y     label   call on click/ function
 test_button = g.Button(70,    30,     g.vec2(250, 125), "test", test)
