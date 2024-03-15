@@ -133,13 +133,13 @@ class vec2:
         if modifier == "cbr":
             return vec2(self.x - width//2, self.y - height//2)
         elif modifier == "tl":
-            return vec2(self.x - int(width/2), self.y - int(height/2))
+            return vec2(self.x - width//2, self.y - height//2)
         elif modifier == "tr":
-            return vec2(self.x + int(width/2), self.y - int(height/2))
+            return vec2(self.x + width//2, self.y - height//2)
         elif modifier == "bl":
-            return vec2(self.x - int(width/2), self.y + int(height/2))
+            return vec2(self.x - width//2, self.y + height//2)
         elif modifier == "br":
-            return vec2(self.x + int(width/2), self.y + int(height/2))
+            return vec2(self.x + width//2, self.y + height//2)
 
     def get(self) -> Tuple[int, int]:
         return (self.x, self.y)
