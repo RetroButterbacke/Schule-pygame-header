@@ -42,6 +42,7 @@ drawRect(window, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = r
 drawCircle(window, pos: vec2, radius: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texture: Union[None, Texture] = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: Union[float, int] = 3.9999999) -> None
 drawTriangle(window, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texture: Union[None, Texture] = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: Union[float, int] = 14) -> None
 drawTexture(window, pos: vec2, width: int, height: int, texture: Texture, *, rotation: int = 0, transparency: Union[float, int] = 3.9999999) -> None
+drawText(window, pos: vec2, width: int, height: int, text: str, color: Union[rgb, rgba] = rgba(0, 0, 0, 255), fontStyle: Union[str, None] = None, *, rotation: int = 0) -> None
 
 addButton(button: Button) -> None
 
@@ -63,7 +64,7 @@ rgb.toRGBA(alpha: int = 255) -> rgba
 
 use: 
   color = rgb(255, 255, 255)
-  drawRect(..., color.get(), ...)
+  drawRect(..., color, ...)
 
 # Texture
 Texture(filePath: str) -> Texture
