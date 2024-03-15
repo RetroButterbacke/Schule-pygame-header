@@ -7,18 +7,6 @@ import sys
 
 clock = Clock()
 
-WINDOW_FLAGS = {
-        pg.FULLSCREEN: "FULLSCREEN",
-        pg.RESIZABLE: "RESIZABLE",
-        pg.NOFRAME: "NOFRAME",
-        pg.HWSURFACE: "HWSUEFACE",
-        pg.DOUBLEBUF: "DOUBLEBUF",
-        pg.OPENGL: "OPENGL",
-        pg.HIDDEN: "HIDDEN",
-        pg.SCALED: "SCALED",
-        pg.SHOWN: "SHOWN"
-        }
-
 keys = {
     pygame.K_a: "A",
     pygame.K_b: "B",
