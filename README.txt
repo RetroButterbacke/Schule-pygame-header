@@ -38,10 +38,11 @@ showHitboxes(show: bool) -> None # Enable/Disable Hitbox drawing
 
 ### transparency: der standard für objekte ist 3.9999999, für polygons ist es 14, desto näher zu 0, desto transparenter
 
+drawLine(window, pos1: vec2, pos2: vec2, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), depth: int = 1) -> None
 drawRect(window, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texture: Union[None, Texture] = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: Union[float, int] = 3.9999999, border_radius: int = 0) -> None # der * macht es, dass alles vorm * in der reinfolge ohne variablen namen gegeben werden kann, alles andere muss mit namen beim call benutzt werden
 drawCircle(window, pos: vec2, radius: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texture: Union[None, Texture] = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: Union[float, int] = 3.9999999) -> None
 drawTriangle(window, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texture: Union[None, Texture] = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: Union[float, int] = 14) -> None
-drawTexture(window, pos: vec2, width: int, height: int, texture: Texture, *, rotation: int = 0, transparency: Union[float, int] = 3.9999999) -> None
+drawTexture(window, pos: vec2, width: int, height: int, texture: Texture, *, rotation: int = 0) -> None
 drawText(window, pos: vec2, width: int, height: int, text: str, color: Union[rgb, rgba] = rgba(0, 0, 0, 255), fontStyle: Union[str, None] = None, *, rotation: int = 0) -> None
 
 addButton(button: Button) -> None
