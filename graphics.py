@@ -294,6 +294,9 @@ def showHitboxes(draw: bool) -> None:
     global drawHitboxes
     drawHitboxes = draw
 
+def drawLine(window: pg.Surface, pos1: vec2, pos2: vec2, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), depth: int = 1) -> None:
+    pg.draw.line(window, color.get(), pos1.get(), pos2.get(), depth)
+
 def drawRect(window: pg.Surface, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texture: Union[None, Texture] = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: Union[float, int] = 3.9999999, border_radius: int = 0) -> None:
     topleft: vec2 = pos.convert(width, height, "tl")
     mask: pg.Surface = pg.Surface((width, height), depth=8)
