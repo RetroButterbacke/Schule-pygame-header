@@ -2,7 +2,6 @@ from collections.abc import Callable
 from typing import List, Tuple, Union
 from dataclasses import dataclass
 import pygame as pg, pygame
-from pygame.surface import Surface
 from pygame.time import Clock 
 import sys
 
