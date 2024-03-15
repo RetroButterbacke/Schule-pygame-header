@@ -49,6 +49,7 @@ addButton(button: Button) -> None
 
 createWindow(width: int, height: int, caption: str, window_flags: int) -> pygame.Surface
 startGameLoop(gameLoop: Callable, window, escape_sequence: Union[Tuple[str, ...], str], framerate: int, refreshrate: int = 1) -> None
+quit() # quit the game / close window + end program
 
 ## classes + uses
 
@@ -66,6 +67,18 @@ rgb.toRGBA(alpha: int = 255) -> rgba
 use: 
   color = rgb(255, 255, 255)
   drawRect(..., color, ...)
+
+# Timer ### stopt wenn program endet
+# Am besten startet man nur einen Timer da threads lag erzeugen können wenn zu viele existieren
+Timer(delay: int, task: Callable)
+start()
+stop()
+
+use:
+  def calcNext():
+    ....
+  timer: graphics.Timer = graphics.Timer(100, calcNext)
+  timer.start()
 
 # Texture
 Texture(filePath: str) -> Texture
