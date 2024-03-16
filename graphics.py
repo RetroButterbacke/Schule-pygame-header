@@ -5,6 +5,7 @@ import pygame as pg, pygame
 from pygame.time import Clock 
 import sys
 import threading
+import time
 from math import sqrt
 
 clock = Clock()
@@ -207,6 +208,7 @@ class Timer:
             if current_time - last_update >= self.delay:
                 last_update = current_time
                 self.task()
+            time.sleep(0.01)
 
     def start(self) -> None:
         if not self.running:
@@ -428,12 +430,14 @@ class Button:
         self.y = topleft.y
         self.label = label
         self.runOnClick = runOnClick
-        
+        self.isDrawn: bool = False
+
     def onClick(self, pos: vec2) -> None:
         if self.range.inRange(pos):
             self.runOnClick()
 
     def draw(self, window: pg.Surface, design: int = 0, fontStyle: Union[str, None] = None, fontColor: rgb = rgb(0, 0, 0), outlined: bool = False, outline_depth: int = 0, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), outlineColor: Union[rgb, rgba] = rgba(255, 255, 255, 255), border_radius: int = 20, texture: Union[None, Texture] = None, outlineTexture: Union[None, Texture] = None, scaled: bool = True, scaledOutline: bool = True, transparency: float = 3.9999999, transparencyOutline: float = 3.9999999, rotation: int = 0) -> None:
+        self.isDrawn = True
         if design == 0:
             drawRect(window, vec2(self.x, self.y).convert(self.width, self.height, "ctl"), self.width, self.height, color, texture, scaled=scaled, transparency=transparency, rotation=rotation)
             if outlined:
@@ -539,15 +543,20 @@ def startGameLoop(gameLoop: Callable, window: pg.Surface, escape_sequence: Union
 
         window.fill(ClearColor.get())
         
+        for button in visual_buttons:
+            button.isDrawn = False
+
         gameLoop()
 
         if drawHitboxes:
             for button in visual_buttons:
-                button.drawHitbox(window, hitboxColor)
+                if button.isDrawn:
+                    button.drawHitbox(window, hitboxColor)
 
-        if isButtonPressed("LEFT"):
+        if wasButtonPressed("LEFT"):
             for button in visual_buttons:
-                button.onClick(getMousePos())
+                if button.isDrawn:
+                    button.onClick(getMousePos())
 
         pg.display.flip()
         clock.tick(framerate)
