@@ -149,7 +149,7 @@ class vec2:
         return (self.x, self.y)
     
     def __eq__(self, other: 'vec2') -> bool:
-        return self.x == other.x and self.y == other.y
+            return self.x == other.x and self.y == other.y
     
     def __mul__(self, factor: int) -> 'vec2':
         return vec2(self.x * factor, self.y * factor)
@@ -199,11 +199,12 @@ class Timer:
         self.task = task
         self.running = False
         self.thread = None
+        self.stop_flag = threading.Event()
 
     def _run(self):
         global running
         last_update: int = pg.time.get_ticks()
-        while self.running and running:
+        while self.running and running and not self.stop_flag.is_set():
             current_time = pg.time.get_ticks()
             if current_time - last_update >= self.delay:
                 last_update = current_time
@@ -218,8 +219,9 @@ class Timer:
 
     def stop(self):
         if self.running:
-            self.running = False
+            self.stop_flag.set()
             self.thread.join()
+            self.running = False
 
 class Texture:
     def __init__(self, filePath: str):
@@ -406,18 +408,15 @@ def drawText(window: pg.Surface, pos: vec2, width: int, height: int, text: str, 
     fontDims = getFontDimensions(text, fontStyle, width, height)
     font: pg.font.Font
     if fontStyle != None:
-        font = pg.font.Font(fontStyle, fontDims[0])
+        font = pg.font.Font(pg.font.match_font(fontStyle), fontDims[0])
     else:
         font = pg.font.Font(None, fontDims[0])
     textSurface: pg.Surface = font.render(text, True, color.get())
     x = (width - fontDims[1]) // 2
     y = (height - fontDims[2]) // 2
-    mask: pg.Surface = pg.Surface((width, height))
-    pg.transform.rotate(mask, -rotation)
-    mask.blit(textSurface, (x, y))
-    mask.set_colorkey((0, 0, 0, 0))
+    pg.transform.rotate(textSurface, -rotation)
     textPos: vec2 = vec2(topleft.x + x, topleft.y + y)
-    window.blit(mask, textPos.get())
+    window.blit(textSurface, textPos.get())
 
 class Button:
     def __init__(self, width: int, height: int, pos: vec2, label: str, runOnClick: Callable):
