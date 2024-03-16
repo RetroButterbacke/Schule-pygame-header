@@ -37,6 +37,7 @@ setHitboxColor(color: Union[rgb, rgba]) -> None # Hitbox color für die buttons
 showHitboxes(show: bool) -> None # Enable/Disable Hitbox drawing
 
 ### transparency: der standard für objekte ist 3.9999999, für polygons ist es 14, desto näher zu 0, desto transparenter
+## Farbe kann bei den objecten nicht schwarz also (0, 0, 0) sein, da pygame ein problem transparens also (0, 0, 0, 0) von (0, 0, 0, 255) unterscheiden, drawText kann trotzdem die color auf schwarz haben da der color_key nicht geändert wird.
 
 drawLine(window, pos1: vec2, pos2: vec2, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), depth: int = 1) -> None
 drawRect(window, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texture: Union[None, Texture] = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: Union[float, int] = 3.9999999, border_radius: int = 0) -> None # der * macht es, dass alles vorm * in der reinfolge ohne variablen namen gegeben werden kann, alles andere muss mit namen beim call benutzt werden
