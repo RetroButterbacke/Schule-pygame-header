@@ -1,6 +1,7 @@
 ## Needed
 #packages
 pygame
+numpy
 
 #modules
 graphics.py
