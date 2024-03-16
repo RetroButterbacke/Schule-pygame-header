@@ -1,6 +1,5 @@
 ## Needed
 #packages
-numpy
 pygame
 
 #modules
