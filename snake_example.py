@@ -223,9 +223,9 @@ def gameLoop():
         g.drawText(window, g.vec2(window.get_width() - 80, 13), 120, 50, f"HighScore: {HighScore}")
 
     g.drawText(window, g.vec2(tileSize * 2, tileSize // 2), tileSize * 4, tileSize * 2, "Tunneling")
-    tunnelingButton.draw(window, 0, "Arial", g.rgb(0, 0, 0), True, int(tileSize * 0.2), g.rgb(255, 255, 255), g.rgb(0, 50, 0))
+    tunnelingButton.draw(window, 0, "Arial", g.rgb(0, 0, 0), True, int(tileSize * 0.2), g.rgb(255, 255, 255), g.rgb(0, 0 ,0))
     if tunneling:
-        g.drawRect(window, g.vec2((tileSize * 4) + tileSize // 2, tileSize // 2), tileSize, tileSize, g.rgb(0, 50, 0))
+        g.drawRect(window, g.vec2((tileSize * 4) + tileSize // 2, tileSize // 2), tileSize, tileSize, g.rgb(0, 0, 0))
     return
 
 g.startGameLoop(gameLoop, window, "ESCAPE", 60)

@@ -238,7 +238,7 @@ class Texture:
             texture = self.getScaled(width, height)
         else:
             texture = self.get()
-        result = pygame.Surface((width, height), depth=32)
+        result = pygame.Surface((width, height))
         for x in range(0, width, texture.get_width()):
             for y in range(0, height, texture.get_height()):
                 result.blit(texture,(x,y))
@@ -247,8 +247,9 @@ class Texture:
     # the higher the transparency, the more you can see it max 3.9.....(< 4) for 8-bit because 32 bits are to high for this?! for 16 bit its 14  wich would be polygons
     def apply_alpha(self, mask: pg.Surface, transparency: Union[float, int] = 3.9999999) -> pg.Surface:
         texture = self.texture.convert_alpha()
-        target = pygame.surfarray.pixels_alpha(texture)
-        target[:] = pygame.surfarray.array2d(mask) * transparency
+        target = pg.surfarray.pixels_alpha(texture)
+        target_array = pg.surfarray.array2d(mask) * transparency
+        target[:] = target_array
         del target
         return texture
 
@@ -256,7 +257,10 @@ class Texture:
         window.blit(self.apply_alpha(mask, transparency), topleft.get())
 
     def rotate(self, rotation: int) -> None:
-        pg.transform.rotate(self.image, -rotation)
+        self.texture = pg.transform.rotate(self.image, -rotation)
+
+    def set_alpha(self, alpha: int) -> None:
+        self.texture =  self.texture.set_alpha(alpha)
 
     def getScaled(self, width: int, height: int) -> pg.Surface:
         return pg.transform.scale(self.image, (width, height))
@@ -357,13 +361,13 @@ def showHitboxes(draw: bool) -> None:
 def drawLine(window: pg.Surface, pos1: vec2, pos2: vec2, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), depth: int = 1) -> None:
     pg.draw.line(window, color.get(), pos1.get(), pos2.get(), depth)
 
-def drawRect(window: pg.Surface, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texture: Union[None, Texture] = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: Union[float, int] = 3.9999999, border_radius: int = 0) -> None:
+def drawRect(window: pg.Surface, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texture: Union[None, Texture] = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: int = 255, border_radius: int = 0) -> None:
     topleft: vec2 = pos.convert(width, height, "tl")
-    mask: pg.Surface = pg.Surface((width, height), depth=8)
+    mask: pg.Surface = pg.Surface((width, height), pg.SRCALPHA)
     pg.draw.rect(mask, color.get(), (0, 0, width, height), lineDepth, border_radius)
-    pg.transform.rotate(mask, -rotation)
-    
-    mask.set_colorkey((0,0,0,0))
+    mask.set_alpha(transparency)
+
+    mask = pg.transform.rotate(mask, -rotation)
 
     if texture != None:
         texture.rotate(rotation)
@@ -373,13 +377,13 @@ def drawRect(window: pg.Surface, pos: vec2, width: int, height: int, color: Unio
         window.blit(mask, topleft.get())
             
 
-def drawCircle(window: pg.Surface, pos: vec2, radius: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texture: Union[None, Texture] = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: Union[float, int] = 3.9999999) -> None:
+def drawCircle(window: pg.Surface, pos: vec2, radius: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texture: Union[None, Texture] = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
     topleft: vec2 = pos.convert(radius * 2, radius * 2, "tl")
-    mask: pg.Surface = pg.Surface((radius * 2, radius * 2), depth=8)
+    mask: pg.Surface = pg.Surface((radius * 2, radius * 2), pg.SRCALPHA)
     pg.draw.circle(mask, color.get(), (radius, radius), radius, lineDepth)
-    pg.transform.rotate(mask, -rotation)
+    mask.set_alpha(transparency)
 
-    mask.set_colorkey((0,0,0,0))
+    mask = pg.transform.rotate(mask, -rotation)
 
     if texture != None:
         texture.rotate(rotation)
@@ -388,13 +392,13 @@ def drawCircle(window: pg.Surface, pos: vec2, radius: int, color: Union[rgb, rgb
     else:
         window.blit(mask, topleft.get())
 
-def drawTriangle(window: pg.Surface, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texture: Union[None, Texture] = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: Union[float, int] = 14) -> None:
+def drawTriangle(window: pg.Surface, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texture: Union[None, Texture] = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
     topleft: vec2 = pos.convert(width, height, "tl")
-    mask: pg.Surface = pg.Surface((width, height), depth=16)
+    mask: pg.Surface = pg.Surface((width, height), pg.SRCALPHA)
     pg.draw.polygon(mask, color.get(), [((width//2) - 2, 0), (0, height - 2), (width - 2, height - 2)], lineDepth)
-    pg.transform.rotate(mask, -rotation)
+    mask.set_alpha(transparency)
 
-    mask.set_colorkey((0,0,0,0))
+    mask = pg.transform.rotate(mask, -rotation)
 
     if texture != None:
         texture.rotate(rotation)
@@ -403,9 +407,10 @@ def drawTriangle(window: pg.Surface, pos: vec2, width: int, height: int, color: 
     else:
         window.blit(mask, topleft.get())
 
-def drawTexture(window: pg.Surface, pos: vec2, width: int, height: int, texture: Texture, *, rotation: int = 0) -> None:
+def drawTexture(window: pg.Surface, pos: vec2, width: int, height: int, texture: Texture, *, rotation: int = 0, transparency: int = 255) -> None:
     topleft: vec2 = pos.convert(width, height, "tl")
     texture.rotate(rotation)
+    texture.set_alpha(transparency)
     window.blit(texture.getScaled(width, height), topleft.get())
 
 def drawText(window: pg.Surface, pos: vec2, width: int, height: int, text: str, color: Union[rgb, rgba] = rgba(0, 0, 0, 255), fontStyle: Union[None, str] = None, *, rotation: int = 0) -> None:
@@ -436,7 +441,7 @@ class Button:
         if self.range.inRange(pos):
             self.runOnClick()
 
-    def draw(self, window: pg.Surface, design: int = 0, fontStyle: Union[str, None] = None, fontColor: rgb = rgb(0, 0, 0), outlined: bool = False, outline_depth: int = 0, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), outlineColor: Union[rgb, rgba] = rgba(255, 255, 255, 255), border_radius: int = 20, texture: Union[None, Texture] = None, outlineTexture: Union[None, Texture] = None, scaled: bool = True, scaledOutline: bool = True, transparency: float = 3.9999999, transparencyOutline: float = 3.9999999, rotation: int = 0) -> None:
+    def draw(self, window: pg.Surface, design: int = 0, fontStyle: Union[str, None] = None, fontColor: rgb = rgb(0, 0, 0), outlined: bool = False, outline_depth: int = 0, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), outlineColor: Union[rgb, rgba] = rgba(255, 255, 255, 255), border_radius: int = 20, texture: Union[None, Texture] = None, outlineTexture: Union[None, Texture] = None, scaled: bool = True, scaledOutline: bool = True, transparency: int = 255, transparencyOutline: int = 255, rotation: int = 0) -> None:
         self.isDrawn = True
         if design == 0:
             drawRect(window, vec2(self.x, self.y).convert(self.width, self.height, "ctl"), self.width, self.height, color, texture, scaled=scaled, transparency=transparency, rotation=rotation)
@@ -493,6 +498,8 @@ def startGameLoop(gameLoop: Callable, window: pg.Surface, escape_sequence: Union
         just_released_keys.clear()
         just_released_buttons.clear()
         for event in pg.event.get():
+            if event.type == pg.QUIT:
+                running = False
             if event.type == pg.KEYDOWN:
                 if event.key in keys:
                     keys_down[keys[event.key]] = True
