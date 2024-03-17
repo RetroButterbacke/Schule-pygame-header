@@ -232,17 +232,8 @@ class Texture:
             print(f"Error loading texture: {e}")
             sys.exit()
 
-    def loadTileTexture(self, width: int, height: int, scaled: bool) -> None:
-        texture: pg.Surface
-        if scaled:
-            texture = self.getScaled(width, height)
-        else:
-            texture = self.get()
-        result = pygame.Surface((width, height))
-        for x in range(0, width, texture.get_width()):
-            for y in range(0, height, texture.get_height()):
-                result.blit(texture,(x,y))
-        self.texture = result
+    def convert(self, width: int, height: int, scaled: bool) -> None:
+        self.texture: pg.Surface = self.getScaled(width, height) if scaled else self.get()
 
     # the higher the transparency, the more you can see it max 3.9.....(< 4) for 8-bit because 32 bits are to high for this?! for 16 bit its 14  wich would be polygons
     def apply_alpha(self, mask: pg.Surface, transparency: Union[float, int] = 3.9999999) -> pg.Surface:
@@ -371,7 +362,7 @@ def drawRect(window: pg.Surface, pos: vec2, width: int, height: int, color: Unio
 
     if texture != None:
         texture.rotate(rotation)
-        texture.loadTileTexture(width, height, scaled)
+        texture.convert(width, height, scaled)
         texture.apply(window, mask, topleft, transparency)
     else:
         window.blit(mask, topleft.get())
@@ -387,7 +378,7 @@ def drawCircle(window: pg.Surface, pos: vec2, radius: int, color: Union[rgb, rgb
 
     if texture != None:
         texture.rotate(rotation)
-        texture.loadTileTexture(radius * 2, radius * 2, scaled)
+        texture.convert(radius * 2, radius * 2, scaled)
         texture.apply(window, mask, topleft, transparency)
     else:
         window.blit(mask, topleft.get())
@@ -402,7 +393,7 @@ def drawTriangle(window: pg.Surface, pos: vec2, width: int, height: int, color: 
 
     if texture != None:
         texture.rotate(rotation)
-        texture.loadTileTexture(width, height, scaled)
+        texture.convert(width, height, scaled)
         texture.apply(window, mask, topleft, transparency)
     else:
         window.blit(mask, topleft.get())
