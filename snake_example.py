@@ -1,9 +1,10 @@
 import graphics as g
 from typing import List
 import random
+import pygame as pg
 
 g.init()
-window = g.createWindow(1000, 500, "Snake", 0)
+window = g.createWindow(1000, 500, "Snake")
 g.setClearColor(g.rgb(7, 207, 177))
 
 SnakeHead: g.vec2
@@ -26,7 +27,7 @@ HighScore: int = 0
 
 def applePos() -> g.vec2:
     pos = g.vec2((random.randint(0, (window.get_width() - 1)//tileSize) * tileSize) + tileSize // 2, (random.randint(0, (window.get_height() - 1)//tileSize) * tileSize) + tileSize // 2)
-    for _ in range(0, (window.get_width() - 1) // tileSize * (window.get_height() - 1) // tileSize):
+    for _ in range((window.get_width() - 1) // tileSize * (window.get_height() - 1) // tileSize):
         inBody: bool = False
         for tile in SnakeBody:
             if tile == pos:
@@ -190,10 +191,10 @@ def gameLoop():
             timer.stop()
 
     if drawGrid:
-        for y in range(1, window.get_height() - 1//tileSize):
-            g.drawLine(window, g.vec2(0, y * tileSize), g.vec2(1000, y * tileSize), g.rgb(0, 60, 0))
-        for x in range(1, window.get_width()//tileSize + 1):
-            g.drawLine(window, g.vec2(x * tileSize, 0), g.vec2(x * tileSize, 499), g.rgb(0, 60, 0))
+        for x in range(1, window.get_width() // tileSize):
+            for y in range(1, window.get_height() // tileSize):
+                g.drawLine(window, g.vec2(x * tileSize, 0), g.vec2(x * tileSize, window.get_height() - 1), g.rgb(0, 60, 0))
+                g.drawLine(window, g.vec2(0, y * tileSize), g.vec2(window.get_width() - 1, y * tileSize), g.rgb(0, 60, 0))
 
     if startGame:
         g.drawRect(window, Apple, tileSize, tileSize, g.rgb(150, 0, 0))
