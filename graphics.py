@@ -214,6 +214,7 @@ class Timer:
     def start(self) -> None:
         if not self.running:
             self.running = True
+            self.stop_flag.clear()
             self.thread = threading.Thread(target=self._run)
             self.thread.start()
 
@@ -278,22 +279,26 @@ class Range:
 
 def getFontDimensions(text: str, font_style: Union[None, str], width: int, height: int) -> Tuple[int, int, int]:
     font_size = 1
-    if font_style != None:
-        font = pg.font.Font(pg.font.match_font(font_style), font_size)
-    else:
-        font = pg.font.Font(None, font_size)
+    font = pg.font.Font(pg.font.match_font(font_style), font_size) if font_style else pg.font.Font(None, font_size)
     text_surface = font.render(text, True, (0, 0, 0, 0))
-    while text_surface.get_width() < width and text_surface.get_height() < height:
-        font_size += 1
-        if font_style != None:
-            font = pygame.font.Font(pg.font.match_font(font_style), font_size)
-        else:
-            font = pygame.font.Font(None, font_size)
+
+    # Perform binary search to find optimal font size
+    low, high = 1, max(width, height)
+    while low <= high:
+        mid = (low + high) // 2
+        font = pg.font.Font(pg.font.match_font(font_style), mid) if font_style else pg.font.Font(None, mid)
         text_surface = font.render(text, True, (0, 0, 0, 0))
-    if font_style != None:
-        return (font_size - 1, pg.font.Font(pg.font.match_font(font_style), font_size-1).render(text, True, (0,0,0,0)).get_width(), pg.font.Font(pg.font.match_font(font_style), font_size).render(text, True, (0,0,0)).get_height())
-    else:
-        return (font_size - 1, pg.font.Font(None, font_size-1).render(text, True, (0,0,0,0)).get_width(), pg.font.Font(None, font_size-1).render(text, True, (0,0,0,0)).get_height()) 
+        
+        if text_surface.get_width() <= width and text_surface.get_height() <= height:
+            font_size = mid
+            low = mid + 1
+        else:
+            high = mid - 1
+
+    font = pg.font.Font(pg.font.match_font(font_style), font_size) if font_style else pg.font.Font(None, font_size)
+    text_surface = font.render(text, True, (0, 0, 0, 0))
+
+    return font_size, text_surface.get_width(), text_surface.get_height()
 
 ClearColor: rgb = rgb(0, 0, 0)
 
@@ -406,11 +411,7 @@ def drawTexture(window: pg.Surface, pos: vec2, width: int, height: int, texture:
 def drawText(window: pg.Surface, pos: vec2, width: int, height: int, text: str, color: Union[rgb, rgba] = rgba(0, 0, 0, 255), fontStyle: Union[None, str] = None, *, rotation: int = 0) -> None:
     topleft: vec2 = pos.convert(width, height, "tl")
     fontDims = getFontDimensions(text, fontStyle, width, height)
-    font: pg.font.Font
-    if fontStyle != None:
-        font = pg.font.Font(pg.font.match_font(fontStyle), fontDims[0])
-    else:
-        font = pg.font.Font(None, fontDims[0])
+    font = pg.font.Font(pg.font.match_font(fontStyle), fontDims[0]) if fontStyle else pg.font.Font(None, fontDims[0])
     textSurface: pg.Surface = font.render(text, True, color.get())
     x = (width - fontDims[1]) // 2
     y = (height - fontDims[2]) // 2
@@ -419,7 +420,7 @@ def drawText(window: pg.Surface, pos: vec2, width: int, height: int, text: str, 
     window.blit(textSurface, textPos.get())
 
 class Button:
-    def __init__(self, width: int, height: int, pos: vec2, label: str, runOnClick: Callable):
+    def __init__(self, width: int, height: int, pos: vec2, label: Union[None, str], runOnClick: Callable):
         topleft = pos.convert(width, height, "tl")
         bottomright = pos.convert(width, height, "br")
         self.range = Range(topleft.x, topleft.y, bottomright.x, bottomright.y)
@@ -445,17 +446,14 @@ class Button:
             drawRect(window, vec2(self.x, self.y).convert(self.width, self.height, "ctl"), self.width, self.height, color, texture, scaled=scaled, transparency=transparency, rotation=rotation, border_radius=border_radius)
             if outlined:
                 drawRect(window, vec2(self.x, self.y).convert(self.width, self.height, "ctl"), self.width, self.height, outlineColor, outlineTexture, scaled=scaledOutline, transparency=transparencyOutline, rotation=rotation, border_radius=border_radius, lineDepth=outline_depth)
-        fontDims = getFontDimensions(self.label, fontStyle, self.width, self.height) 
-        font: pg.font.Font
-        if fontStyle != None:
-            font = pg.font.Font(pg.font.match_font(fontStyle), fontDims[0])
-        else:
-            font = pg.font.Font(None, fontDims[0])
-        textSurface: pg.Surface = font.render(self.label, True, fontColor.get())
-        x: int = (self.width - fontDims[1]) // 2
-        y: int = (self.height - fontDims[2]) // 2
-        textPos: vec2 = vec2(self.x + x, self.y + y)
-        window.blit(textSurface, textPos.get())
+        if self.label != None:
+            fontDims = getFontDimensions(self.label, fontStyle, self.width, self.height) 
+            font = pg.font.Font(pg.font.match_font(fontStyle), fontDims[0]) if fontStyle else pg.font.Font(None, fontStyle)
+            textSurface: pg.Surface = font.render(self.label, True, fontColor.get())
+            x: int = (self.width - fontDims[1]) // 2
+            y: int = (self.height - fontDims[2]) // 2
+            textPos: vec2 = vec2(self.x + x, self.y + y)
+            window.blit(textSurface, textPos.get())
 
     def drawHitbox(self, window: pg.Surface, color: Union[rgb, rgba] = rgba(150, 0 ,0, 255)) -> None:
         pg.draw.rect(window, color.get(), (self.x, self.y, self.width, self.height), 1)
@@ -490,10 +488,10 @@ def startGameLoop(gameLoop: Callable, window: pg.Surface, escape_sequence: Union
     running = True
 
     while running:
-        just_pressed_keys = []
-        just_pressed_buttons = []
-        just_released_keys = []
-        just_released_buttons = []
+        just_pressed_keys.clear()
+        just_pressed_buttons.clear()
+        just_released_keys.clear()
+        just_released_buttons.clear()
         for event in pg.event.get():
             if event.type == pg.KEYDOWN:
                 if event.key in keys:
