@@ -37,7 +37,7 @@ def applePos() -> g.vec2:
             pos.x += 1
             if (pos.x > (window.get_width() - 1) // tileSize):
                 pos.x = tileSize//2
-                pos.y += 1
+                pos.y += tileSize
 
 def calculateNext():
     global Apple
@@ -74,7 +74,7 @@ def calculateNext():
 
     if not tunneling:
         if SnakeHead.x + tileSize * valocity_x > window.get_width() - 1 or SnakeHead.y + tileSize * valocity_y > window.get_height() - 1 or SnakeHead.x + tileSize * valocity_x < 0 or SnakeHead.y + tileSize * valocity_y < 0:
-            HighScore = len(SnakeBody)
+            HighScore = len(SnakeBody) if len(SnakeBody) > HighScore else HighScore
             startGame = False
             isGameOver = True
             return
@@ -94,7 +94,7 @@ def calculateNext():
 
     for tile in SnakeBody:
         if SnakeHead == tile:
-            HighScore = len(SnakeBody)
+            HighScore = len(SnakeBody) if len(SnakeBody) > HighScore else HighScore            
             startGame = False
             isGameOver = True
             return
@@ -124,13 +124,11 @@ def start():
     global valocity_x
     global valocity_y
 
-    print(startGame)
-
     if not startGame:
         if random.randint(1, 2) == 1:
             valocity_x = random.choice([-1, 1])
         else:
-            valocity_x = random.choice([-1, 1])
+            valocity_y = random.choice([-1, 1])
         SnakeHead = g.vec2((random.randint(0, (window.get_width() - 1)//tileSize) * tileSize) + tileSize // 2, (random.randint(0, (window.get_height() - 1)//tileSize) * tileSize) + tileSize // 2)
         Apple = applePos()
         startGame = True
@@ -139,6 +137,10 @@ def start():
     
 
 def reset():
+    global valocity_x
+    global valocity_y
+    valocity_x = 0
+    valocity_y = 0
     SnakeBody.clear()
     start()
     return
@@ -182,7 +184,7 @@ def gameLoop():
 
     if g.wasKeyPressed("R"):
         if startGame:
-            HighScore = len(SnakeBody)
+            HighScore = len(SnakeBody) if len(SnakeBody) > HighScore else HighScore
             startGame = False
             isGameOver = True
             timer.stop()
@@ -212,20 +214,24 @@ def gameLoop():
             g.drawRect(window, tile, tileSize, tileSize, g.rgb(0, 120, 0), lineDepth=3)
         g.drawRect(window, SnakeHead, tileSize, tileSize, g.rgb(0, 120, 0))
         g.drawRect(window, SnakeHead, tileSize, tileSize, g.rgb(0, 160, 0), lineDepth=3)
-        g.drawText(window, g.vec2(window.get_width() // 2, (window.get_height() // 2) - 100), 400, 250, "Game Over", g.rgb(150, 0, 0))
-        g.drawText(window, g.vec2(window.get_width() // 2, (window.get_height() // 2) - 30), 300, 150, f"HighScore: {HighScore}")
+        g.drawText(window, g.vec2(window.get_width() // 2, (window.get_height() // 2) - 120), 400, 250, "Game Over", g.rgb(150, 0, 0))
+        g.drawText(window, g.vec2(window.get_width() // 2, (window.get_height() // 2) - 65), 240, 50, f"Score: {len(SnakeBody)}")
+        g.drawText(window, g.vec2(window.get_width() // 2, (window.get_height() // 2) - 25), 240, 150, f"HighScore: {HighScore}")
         retryButton.draw(window, 0, "Arial", g.rgb(0, 0, 60), True, 3, g.rgb(250, 232, 14), g.rgb(147, 24, 0))
         quitButton.draw(window, 0, "Arial", g.rgb(0, 0, 60), True, 3, g.rgb(250, 232, 14), g.rgb(147, 24, 0))
+        g.drawText(window, g.vec2(tileSize * 2, tileSize // 2), tileSize * 4, tileSize * 2, "Tunneling")
+        tunnelingButton.draw(window, 0, "Arial", g.rgb(0, 0, 0), True, int(tileSize * 0.2), g.rgb(255, 255, 255), g.rgb(0, 0 ,0))
+        if tunneling:
+            g.drawRect(window, g.vec2((tileSize * 4) + tileSize // 2, tileSize // 2), tileSize, tileSize, g.rgb(0, 0, 0))
     else:
         g.drawText(window, g.vec2(window.get_width() // 2, (window.get_height() // 2) - 100), 400, 250, "Snake", g.rgb(0, 160, 0))
         startButton.draw(window, 0, "Arial", g.rgb(0, 0, 60), True, 3, g.rgb(250, 232, 14), g.rgb(147, 24, 0))
         quitButton.draw(window, 0, "Arial", g.rgb(0, 0, 60), True, 3, g.rgb(250, 232, 14), g.rgb(147, 24, 0))
         g.drawText(window, g.vec2(window.get_width() - 80, 13), 120, 50, f"HighScore: {HighScore}")
-
-    g.drawText(window, g.vec2(tileSize * 2, tileSize // 2), tileSize * 4, tileSize * 2, "Tunneling")
-    tunnelingButton.draw(window, 0, "Arial", g.rgb(0, 0, 0), True, int(tileSize * 0.2), g.rgb(255, 255, 255), g.rgb(0, 0 ,0))
-    if tunneling:
-        g.drawRect(window, g.vec2((tileSize * 4) + tileSize // 2, tileSize // 2), tileSize, tileSize, g.rgb(0, 0, 0))
+        g.drawText(window, g.vec2(tileSize * 2, tileSize // 2), tileSize * 4, tileSize * 2, "Tunneling")
+        tunnelingButton.draw(window, 0, "Arial", g.rgb(0, 0, 0), True, int(tileSize * 0.2), g.rgb(255, 255, 255), g.rgb(0, 0 ,0))
+        if tunneling:
+            g.drawRect(window, g.vec2((tileSize * 4) + tileSize // 2, tileSize // 2), tileSize, tileSize, g.rgb(0, 0, 0))
     return
 
 g.startGameLoop(gameLoop, window, "ESCAPE", 60)
