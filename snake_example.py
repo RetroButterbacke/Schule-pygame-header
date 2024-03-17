@@ -150,7 +150,7 @@ def setTunneling():
 startButton = g.Button(100, 50, g.vec2(500, 300), "Start", start)
 retryButton = g.Button(100, 50, g.vec2(500, 300), "Retry", reset)
 quitButton = g.Button(100, 50, g.vec2(500, 360), "Quit", lambda: g.quit())
-tunnelingButton = g.Button(tileSize, tileSize, g.vec2((tileSize * 4) + tileSize // 2, tileSize // 2), None, lambda: setTunneling())
+tunnelingButton = g.Button(tileSize, tileSize, g.vec2((tileSize * 4) + tileSize // 2, tileSize // 2), None, setTunneling)
 g.addButton(retryButton)
 g.addButton(startButton)
 g.addButton(quitButton)
