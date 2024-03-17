@@ -413,14 +413,15 @@ def drawTexture(window: pg.Surface, pos: vec2, width: int, height: int, texture:
     texture.set_alpha(transparency)
     window.blit(texture.getScaled(width, height), topleft.get())
 
-def drawText(window: pg.Surface, pos: vec2, width: int, height: int, text: str, color: Union[rgb, rgba] = rgba(0, 0, 0, 255), fontStyle: Union[None, str] = None, *, rotation: int = 0) -> None:
+def drawText(window: pg.Surface, pos: vec2, width: int, height: int, text: str, color: Union[rgb, rgba] = rgba(0, 0, 0, 255), fontStyle: Union[None, str] = None, *, rotation: int = 0, transparency: int = 255) -> None:
     topleft: vec2 = pos.convert(width, height, "tl")
     fontDims = getFontDimensions(text, fontStyle, width, height)
     font = pg.font.Font(pg.font.match_font(fontStyle), fontDims[0]) if fontStyle else pg.font.Font(None, fontDims[0])
     textSurface: pg.Surface = font.render(text, True, color.get())
     x = (width - fontDims[1]) // 2
     y = (height - fontDims[2]) // 2
-    pg.transform.rotate(textSurface, -rotation)
+    textSurface.set_alpha(transparency)
+    textSurface = pg.transform.rotate(textSurface, -rotation)
     textPos: vec2 = vec2(topleft.x + x, topleft.y + y)
     window.blit(textSurface, textPos.get())
 
