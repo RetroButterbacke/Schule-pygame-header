@@ -148,11 +148,11 @@ class vec2:
     def get(self) -> Tuple[int, int]:
         return (self.x, self.y)
     
+    def __hash__(self):
+        return hash((self.x, self.y))
+    
     def __eq__(self, other: 'vec2') -> bool:
             return self.x == other.x and self.y == other.y
-    
-    def __mul__(self, factor: int) -> 'vec2':
-        return vec2(self.x * factor, self.y * factor)
     
     def __mul__(self, other: 'vec2') -> int:
         return self.x * other.x + self.y * other.y
@@ -164,10 +164,14 @@ class vec2:
         return vec2(self.x - other.x, self.y - other.y)
     
     def norm(self) -> float:
-        return 1 / sqrt(self.x ** 2, self.y ** 2)
+        return sqrt(self.x ** 2 + self.y ** 2)
     
     def normalized(self) -> 'vec2':
-        return vec2(self * self.norm())
+        magnitude = self.norm()
+        if magnitude == 0:
+            return vec2(0, 0)
+        else:
+            return vec2(self.x / magnitude, self.y / magnitude)
 
 @dataclass
 class rgba:
@@ -292,6 +296,8 @@ def getFontDimensions(text: str, font_style: Union[None, str], width: int, heigh
 
     font = pg.font.Font(pg.font.match_font(font_style), font_size) if font_style else pg.font.Font(None, font_size)
     text_surface = font.render(text, True, (0, 0, 0, 0))
+    
+    del font
 
     return font_size, text_surface.get_width(), text_surface.get_height()
 
@@ -406,15 +412,17 @@ def drawTexture(window: pg.Surface, pos: vec2, width: int, height: int, texture:
 
 def drawText(window: pg.Surface, pos: vec2, width: int, height: int, text: str, color: Union[rgb, rgba] = rgba(0, 0, 0, 255), fontStyle: Union[None, str] = None, *, rotation: int = 0, transparency: int = 255) -> None:
     topleft: vec2 = pos.convert(width, height, "tl")
-    fontDims = getFontDimensions(text, fontStyle, width, height)
-    font = pg.font.Font(pg.font.match_font(fontStyle), fontDims[0]) if fontStyle else pg.font.Font(None, fontDims[0])
+    font_size, text_width, text_height = getFontDimensions(text, fontStyle, width, height)
+    font = pg.font.Font(pg.font.match_font(fontStyle), font_size) if fontStyle else pg.font.Font(None, font_size)
     textSurface: pg.Surface = font.render(text, True, color.get())
-    x = (width - fontDims[1]) // 2
-    y = (height - fontDims[2]) // 2
+    x = (width - text_width) // 2
+    y = (height - text_height) // 2
     textSurface.set_alpha(transparency)
     textSurface = pg.transform.rotate(textSurface, -rotation)
     textPos: vec2 = vec2(topleft.x + x, topleft.y + y)
     window.blit(textSurface, textPos.get())
+    del textSurface
+    del font
 
 class Button:
     def __init__(self, width: int, height: int, pos: vec2, label: Union[None, str], runOnClick: Callable):
@@ -444,13 +452,7 @@ class Button:
             if outlined:
                 drawRect(window, vec2(self.x, self.y).convert(self.width, self.height, "ctl"), self.width, self.height, outlineColor, outlineTexture, scaled=scaledOutline, transparency=transparencyOutline, rotation=rotation, border_radius=border_radius, lineDepth=outline_depth)
         if self.label != None:
-            fontDims = getFontDimensions(self.label, fontStyle, self.width, self.height) 
-            font = pg.font.Font(pg.font.match_font(fontStyle), fontDims[0]) if fontStyle else pg.font.Font(None, fontStyle)
-            textSurface: pg.Surface = font.render(self.label, True, fontColor.get())
-            x: int = (self.width - fontDims[1]) // 2
-            y: int = (self.height - fontDims[2]) // 2
-            textPos: vec2 = vec2(self.x + x, self.y + y)
-            window.blit(textSurface, textPos.get())
+            drawText(window, vec2(self.x, self.y).convert(self.width, self.height, "ctl"), self.width, self.height, self.label, fontColor, fontStyle, rotation=rotation, transparency=transparency)
 
     def drawHitbox(self, window: pg.Surface, color: Union[rgb, rgba] = rgba(150, 0 ,0, 255)) -> None:
         pg.draw.rect(window, color.get(), (self.x, self.y, self.width, self.height), 1)
@@ -462,7 +464,7 @@ def addButton(button: Button) -> None :
     global visual_buttons
     visual_buttons.append(button)
 
-def createWindow(width: int, height: int, caption: str, window_flags: int) -> pg.Surface:
+def createWindow(width: int, height: int, caption: str, window_flags: int = 0) -> pg.Surface:
 
     window = pg.display.set_mode((width, height), window_flags)
     pg.display.set_caption(caption)
