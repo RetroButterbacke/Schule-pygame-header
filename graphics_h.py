@@ -151,12 +151,12 @@ class vec2:
     def norm(self) -> float:
         return sqrt(self.x ** 2 + self.y ** 2)
     
-    def normalized(self) -> 'vec2':
+    def normalized(self) -> Tuple[float, float]:
         magnitude = self.norm()
         if magnitude == 0:
-            return vec2(0, 0)
+            return 0, 0
         else:
-            return vec2(int(self.x // magnitude), int(self.y // magnitude))
+            return self.x / magnitude, self.y / magnitude
 
 @dataclass(frozen=True, eq=True)
 class rgba:
@@ -270,16 +270,12 @@ class Texture:
     def apply(self, window: pg.Surface, mask: pg.Surface, topleft: vec2, transparency) -> None:
         window.blit(self.apply_alpha(mask, transparency), topleft._get())
 
-    def set_colorkey(self, color: Union[rgb, rgba]) -> None:
+    def set_colorkey(self, color: rgb) -> None:
         self.texture.set_colorkey(color._get())
 
     def rotate(self, rotation: int) -> None:
         if self.texture:
             object.__setattr__(self, 'texture', pg.transform.rotate(self.texture, -rotation))
-
-    def set_alpha(self, alpha: int) -> None:
-        if self.texture:
-            object.__setattr__(self, 'texture', self.texture.set_alpha(alpha))
 
     def getScaled(self, width: int, height: int) -> pg.Surface:
         return pg.transform.scale(self.texture, (width, height))
@@ -368,118 +364,6 @@ class Button:
 
     def _drawHitbox(self, screen: pg.Surface, color: Union[rgb, rgba] = rgba(150, 0 ,0, 255)) -> None:
         pg.draw.rect(screen, color._get(), (self.topx, self.topy, self.width, self.height), 1)
-
-initialized_texts: List[Text] = []
-initialized_textures: List[Texture] = []
-
-class Surface:
-    def __init__(self, width: int, height: int) -> None:
-        self.surf: pg.Surface = pg.Surface((width, height), pg.SRCALPHA)
-        self.ClearColor: Union[rgb, rgba] = rgba(0, 0, 0, 0)
-
-    def setClearColor(self, color: Union[rgb, rgba]) -> None:
-        self.ClearColor = color
-
-    def clear(self):
-        self.surf.fill(self.ClearColor._get())
-
-    def set_colorkey(self, colorkey: Union[rgb, rgba]) -> None:
-        self.surf.set_colorkey(colorkey._get())
-
-    def set_alpha(self, alpha: int) -> None:
-        self.surf.set_alpha(alpha)
-
-    def drawLine(self, pos1: vec2, pos2: vec2, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), depth: int = 1) -> None:
-        pg.draw.line(self.surf, color._get(), pos1._get(), pos2._get(), depth)
-
-    def drawRect(self, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: int = 255, border_radius: int = 0) -> None:
-        global initialized_textures
-        topleft: vec2 = pos.convert(width, height, "tl")
-        mask: pg.Surface = pg.Surface((width, height), pg.SRCALPHA)
-        pg.draw.rect(mask, color._get(), (0, 0, width, height), lineDepth, border_radius)
-        mask.set_alpha(transparency)
-
-        mask = pg.transform.rotate(mask, -rotation)
-
-        if texturePath != None:
-            texture = Texture(texturePath)
-            if not texture in initialized_textures:
-                texture.load()
-                initialized_textures.append(texture)
-            else:
-                filtered = list(filter(lambda x: x == texture, initialized_textures))
-                texture = filtered[-1]
-            texture.convert(width, height)
-            texture.rotate(rotation)
-            texture.apply(self.surf, mask, topleft, transparency)
-            texture.reset()
-        else:
-            self.surf.blit(mask, topleft._get())
-
-    def drawCircle(self, pos: vec2, radius: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
-        global initialized_textures
-        topleft: vec2 = pos.convert(radius * 2, radius * 2, "tl")
-        mask: pg.Surface = pg.Surface((radius * 2, radius * 2), pg.SRCALPHA)
-        pg.draw.circle(mask, color._get(), (radius, radius), radius, lineDepth)
-        mask.set_alpha(transparency)
-
-        mask = pg.transform.rotate(mask, -rotation)
-
-        if texturePath != None:
-            texture = Texture(texturePath)
-            if not texture in initialized_textures:
-                texture.load()
-                initialized_textures.append(texture)
-            else:
-                filtered = list(filter(lambda x: x == texture, initialized_textures))
-                texture = filtered[-1]
-            texture.convert(radius*2, radius*2)
-            texture.rotate(rotation)
-            texture.apply(self.surf, mask, topleft, transparency)
-            texture.reset()
-        else:
-            self.surf.blit(mask, topleft._get())
-
-    def drawTriangle(self, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
-        global initialized_textures
-        topleft: vec2 = pos.convert(width, height, "tl")
-        mask: pg.Surface = pg.Surface((width, height), pg.SRCALPHA)
-        pg.draw.polygon(mask, color._get(), [((width//2) - 2, 0), (0, height - 2), (width - 2, height - 2)], lineDepth)
-        mask.set_alpha(transparency)
-
-        mask = pg.transform.rotate(mask, -rotation)
-
-        if texturePath != None:
-            texture = Texture(texturePath)
-            if not texture in initialized_textures:
-                texture.load()
-                initialized_textures.append(texture)
-            else:
-                filtered = list(filter(lambda x: x == texture, initialized_textures))
-                texture = filtered[-1]
-            texture.convert(width, height)
-            texture.rotate(rotation)
-            texture.apply(self.surf, mask, topleft, transparency)
-            texture.reset()
-        else:
-            self.surf.blit(mask, topleft._get())
-
-    def drawText(self, pos: vec2, width: int, height: int, text: str, color: Union[rgb, rgba] = rgba(0, 0, 0, 255), fontStyle: Union[None, str] = None, *, rotation: int = 0, transparency: int = 255) -> None:
-        global initialized_texts
-        topleft: vec2 = pos.convert(width, height, "tl")
-        text_instance: Text = Text(text, fontStyle)
-        if not text_instance in initialized_texts:
-            text_instance.load(self.surf.get_width(), self.surf.get_height(), color)
-            initialized_texts.append(text_instance)
-        else:
-            filtered = list(filter(lambda x: x == text_instance, initialized_texts))
-            text_instance = filtered[-1]
-        text_instance.set_alpha(transparency)
-        text_instance.rotate(rotation)
-        self.surf.blit(text_instance.get(width - ((width // 2) // 4), height - ((height // 2) // 4)), vec2(topleft.x + ((width // 2) // 4) // 2, topleft.y + ((height // 2) // 4) // 2)._get())
-        
-    def _get(self) -> pg.Surface:
-        return self.surf
 
 class InputListener:
     def __init__(self) -> None:
@@ -592,6 +476,144 @@ class InputListener:
     def hasMouseMoved(self) -> bool:
         return self.Mouse_Moved
 
+initialized_texts: List[Text] = []
+initialized_textures: List[Texture] = []
+
+class Surface:
+    def __init__(self, width: int, height: int) -> None:
+        self.surf: pg.Surface = pg.Surface((width, height), pg.SRCALPHA)
+        self.ClearColor: Union[rgb, rgba] = rgba(0, 0, 0, 0)
+
+    def setClearColor(self, color: Union[rgb, rgba]) -> None:
+        self.ClearColor = color
+
+    def clear(self):
+        self.surf.fill(self.ClearColor._get())
+
+    def set_colorkey(self, colorkey: rgb) -> None:
+        self.surf.set_colorkey(colorkey._get())
+
+    def set_alpha(self, alpha: int) -> None:
+        self.surf.set_alpha(alpha)
+
+    def drawLine(self, pos1: vec2, pos2: vec2, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), depth: int = 1) -> None:
+        pg.draw.line(self.surf, color._get(), pos1._get(), pos2._get(), depth)
+
+    def drawRect(self, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, colorkey: Union[rgb, None] = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255, border_radius: int = 0) -> None:
+        global initialized_textures
+        topleft: vec2 = pos.convert(width, height, "tl")
+        mask: pg.Surface = pg.Surface((width, height), pg.SRCALPHA)
+        pg.draw.rect(mask, color._get(), (0, 0, width, height), lineDepth, border_radius)
+        mask.set_alpha(transparency)
+
+        mask = pg.transform.rotate(mask, -rotation)
+
+        if texturePath != None:
+            texture = Texture(texturePath)
+            if not texture in initialized_textures:
+                texture.load()
+                initialized_textures.append(texture)
+            else:
+                filtered = list(filter(lambda x: x == texture, initialized_textures))
+                texture = filtered[-1]
+            texture.convert(width, height)
+            texture.rotate(rotation)
+            if colorkey:
+                texture.set_colorkey(colorkey)
+            texture.apply(self.surf, mask, topleft, transparency)
+            texture.reset()
+        else:
+            self.surf.blit(mask, topleft._get())
+
+    def drawCircle(self, pos: vec2, radius: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, colorkey: Union[rgb, None] = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
+        global initialized_textures
+        topleft: vec2 = pos.convert(radius * 2, radius * 2, "tl")
+        mask: pg.Surface = pg.Surface((radius * 2, radius * 2), pg.SRCALPHA)
+        pg.draw.circle(mask, color._get(), (radius, radius), radius, lineDepth)
+        mask.set_alpha(transparency)
+
+        mask = pg.transform.rotate(mask, -rotation)
+
+        if texturePath != None:
+            texture = Texture(texturePath)
+            if not texture in initialized_textures:
+                texture.load()
+                initialized_textures.append(texture)
+            else:
+                filtered = list(filter(lambda x: x == texture, initialized_textures))
+                texture = filtered[-1]
+            texture.convert(radius*2, radius*2)
+            texture.rotate(rotation)
+            if colorkey:
+                texture.set_colorkey(colorkey)
+            texture.apply(self.surf, mask, topleft, transparency)
+            texture.reset()
+        else:
+            self.surf.blit(mask, topleft._get())
+
+    def drawTriangle(self, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, colorkey: Union[rgb, None] = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
+        global initialized_textures
+        topleft: vec2 = pos.convert(width, height, "tl")
+        mask: pg.Surface = pg.Surface((width, height), pg.SRCALPHA)
+        pg.draw.polygon(mask, color._get(), [((width//2) - 2, 0), (0, height - 2), (width - 2, height - 2)], lineDepth)
+        mask.set_alpha(transparency)
+
+        mask = pg.transform.rotate(mask, -rotation)
+
+        if texturePath != None:
+            texture = Texture(texturePath)
+            if not texture in initialized_textures:
+                texture.load()
+                initialized_textures.append(texture)
+            else:
+                filtered = list(filter(lambda x: x == texture, initialized_textures))
+                texture = filtered[-1]
+            texture.convert(width, height)
+            texture.rotate(rotation)
+            if colorkey:
+                texture.set_colorkey(colorkey)
+            texture.apply(self.surf, mask, topleft, transparency)
+            texture.reset()
+        else:
+            self.surf.blit(mask, topleft._get())
+        
+    def drawTexture(self, pos: vec2, width: int, height: int, texturePath: str, *, colorkey: Union[rgb, None] = None, rotation: int = 0, transparency: int = 255) -> None:
+        global initialized_textures
+        topleft: vec2 = pos.convert(width, height, "tl")
+        texture = Texture(texturePath)
+        if not texture in initialized_textures:
+            texture.load()
+            initialized_textures.append(texture)
+        else:
+            filtered = list(filter(lambda x: x == texture, initialized_textures))
+            texture = filtered[-1]
+        texture.convert(width, height)
+        texture.rotate(rotation)
+        if colorkey:
+            texture.set_colorkey(colorkey)
+        texture.apply(self.surf, self.surf, topleft, transparency)
+        texture.reset()
+
+    def drawText(self, pos: vec2, width: int, height: int, text: str, color: Union[rgb, rgba] = rgba(0, 0, 0, 255), fontStyle: Union[None, str] = None, *, rotation: int = 0, transparency: int = 255) -> None:
+        global initialized_texts
+        topleft: vec2 = pos.convert(width, height, "tl")
+        text_instance: Text = Text(text, fontStyle)
+        if not text_instance in initialized_texts:
+            text_instance.load(self.surf.get_width(), self.surf.get_height(), color)
+            initialized_texts.append(text_instance)
+        else:
+            filtered = list(filter(lambda x: x == text_instance, initialized_texts))
+            text_instance = filtered[-1]
+        text_instance.set_alpha(transparency)
+        text_instance.rotate(rotation)
+        self.surf.blit(text_instance.get(width - ((width // 2) // 4), height - ((height // 2) // 4)), vec2(topleft.x + ((width // 2) // 4) // 2, topleft.y + ((height // 2) // 4) // 2)._get())
+
+    def drawSurface(self, topleft: vec2, surface: 'Surface') -> None:
+        self.surf.blit(surface._get(), topleft._get())
+        
+    def _get(self) -> pg.Surface:
+        return self.surf
+
 class Window:
     def __init__(self, width: int, height: int, caption: str, caption_icon: str = "none", window_flags: List[int] = []) -> None:
         flags = reduce(lambda x, y: x | y, window_flags) if len(window_flags) > 0 else 0
@@ -637,9 +659,9 @@ class Window:
         self.framerate = rate
 
     def drawLine(self, pos1: vec2, pos2: vec2, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), depth: int = 1) -> None:
-        pg.draw.line(self.screen, color._get(), pos1._get(), pos2._get(), depth)
+        pg.draw.line(self.surf, color._get(), pos1._get(), pos2._get(), depth)
 
-    def drawRect(self, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: int = 255, border_radius: int = 0) -> None:
+    def drawRect(self, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, colorkey: Union[rgb, None] = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255, border_radius: int = 0) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(width, height, "tl")
         mask: pg.Surface = pg.Surface((width, height), pg.SRCALPHA)
@@ -658,12 +680,14 @@ class Window:
                 texture = filtered[-1]
             texture.convert(width, height)
             texture.rotate(rotation)
-            texture.apply(self.screen, mask, topleft, transparency)
+            if colorkey:
+                texture.set_colorkey(colorkey)
+            texture.apply(self.surf, mask, topleft, transparency)
             texture.reset()
         else:
-            self.screen.blit(mask, topleft._get())
+            self.surf.blit(mask, topleft._get())
 
-    def drawCircle(self, pos: vec2, radius: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
+    def drawCircle(self, pos: vec2, radius: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, colorkey: Union[rgb, None] = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(radius * 2, radius * 2, "tl")
         mask: pg.Surface = pg.Surface((radius * 2, radius * 2), pg.SRCALPHA)
@@ -682,12 +706,14 @@ class Window:
                 texture = filtered[-1]
             texture.convert(radius*2, radius*2)
             texture.rotate(rotation)
-            texture.apply(self.screen, mask, topleft, transparency)
+            if colorkey:
+                texture.set_colorkey(colorkey)
+            texture.apply(self.surf, mask, topleft, transparency)
             texture.reset()
         else:
-            self.screen.blit(mask, topleft._get())
+            self.surf.blit(mask, topleft._get())
 
-    def drawTriangle(self, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
+    def drawTriangle(self, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, colorkey: Union[rgb, None] = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(width, height, "tl")
         mask: pg.Surface = pg.Surface((width, height), pg.SRCALPHA)
@@ -706,27 +732,46 @@ class Window:
                 texture = filtered[-1]
             texture.convert(width, height)
             texture.rotate(rotation)
-            texture.apply(self.screen, mask, topleft, transparency)
+            if colorkey:
+                texture.set_colorkey(colorkey)
+            texture.apply(self.surf, mask, topleft, transparency)
             texture.reset()
         else:
-            self.screen.blit(mask, topleft._get())
+            self.surf.blit(mask, topleft._get())
+        
+    def drawTexture(self, pos: vec2, width: int, height: int, texturePath: str, *, colorkey: Union[rgb, None] = None, rotation: int = 0, transparency: int = 255) -> None:
+        global initialized_textures
+        topleft: vec2 = pos.convert(width, height, "tl")
+        texture = Texture(texturePath)
+        if not texture in initialized_textures:
+            texture.load()
+            initialized_textures.append(texture)
+        else:
+            filtered = list(filter(lambda x: x == texture, initialized_textures))
+            texture = filtered[-1]
+        texture.convert(width, height)
+        texture.rotate(rotation)
+        if colorkey:
+            texture.set_colorkey(colorkey)
+        texture.apply(self.surf, self.surf, topleft, transparency)
+        texture.reset()
 
     def drawText(self, pos: vec2, width: int, height: int, text: str, color: Union[rgb, rgba] = rgba(0, 0, 0, 255), fontStyle: Union[None, str] = None, *, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_texts
         topleft: vec2 = pos.convert(width, height, "tl")
         text_instance: Text = Text(text, fontStyle)
         if not text_instance in initialized_texts:
-            text_instance.load(self.screen.get_width(), self.screen.get_height(), color)
+            text_instance.load(self.surf.get_width(), self.surf.get_height(), color)
             initialized_texts.append(text_instance)
         else:
             filtered = list(filter(lambda x: x == text_instance, initialized_texts))
             text_instance = filtered[-1]
         text_instance.set_alpha(transparency)
         text_instance.rotate(rotation)
-        self.screen.blit(text_instance.get(width - ((width // 2) // 4), height - ((height // 2) // 4)), vec2(topleft.x + ((width // 2) // 4) // 2, topleft.y + ((height // 2) // 4) // 2)._get())
+        self.surf.blit(text_instance.get(width - ((width // 2) // 4), height - ((height // 2) // 4)), vec2(topleft.x + ((width // 2) // 4) // 2, topleft.y + ((height // 2) // 4) // 2)._get())
 
-    def drawSurface(self, topleft: vec2, surface: Surface) -> None:
-        self.screen.blit(surface._get(), topleft._get())
+    def drawSurface(self, topleft: vec2, surface: 'Surface') -> None:
+        self.surf.blit(surface._get(), topleft._get())
 
     def getMousePos(self) -> vec2:
         return vec2(pg.mouse.get_pos()[0], pg.mouse.get_pos()[1])
@@ -743,7 +788,7 @@ class Window:
     def get_height(self) -> int:
         return self.screen.get_height()
     
-    def getSize(self) -> Tuple[int, int]:
+    def get_size(self) -> Tuple[int, int]:
         return self.screen.get_width(), self.screen.get_height()
 
     def clear(self) -> None:
