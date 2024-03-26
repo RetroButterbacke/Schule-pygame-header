@@ -10,11 +10,14 @@ init()
 window = Window(1000, 500, "Snake")
 window.setClearColor(rgb(7, 207, 177))
 
+input: InputListener = InputListener()
+
 SnakeHead: vec2
 SnakeBody: List[vec2] = []
 Apple: vec2
 
 startGame: bool = False
+win: bool = False
 isGameOver: bool = False
 tunneling: bool = False
 
@@ -54,6 +57,12 @@ def calculateNext():
     global startGame
     global isGameOver
     global lastKeys
+
+    if len(SnakeBody) + 1 == (window.get_width() // tileSize) * (window.get_height() // tileSize):
+        HighScore = len(SnakeBody) if len(SnakeBody) > HighScore else HighScore
+        startGame = False
+        win = True
+        return
 
     lastKey: str = "None"
 
@@ -119,7 +128,7 @@ def calculateNext():
     return    
 
 # It is recommended to not create to many timers it can cause lag the best is you create only one and one function that handels the timed updates
-timer: Timer = Timer(200, calculateNext)
+timer: Timer = Timer(120, calculateNext)
 
 def start():
     global SnakeHead
@@ -162,6 +171,39 @@ window.addButton(startButton)
 window.addButton(quitButton)
 window.addButton(tunnelingButton)
 
+def wasKeyPressed(key: str):
+    global startGame
+    global drawGrid
+
+    if key == "Z":
+        print(True)
+        drawGrid = not drawGrid
+        if drawGrid:
+            for x in range(1, window.get_width() // tileSize):
+                for y in range(1, window.get_height() // tileSize):
+                    grid.drawLine(vec2(x * tileSize, 0), vec2(x * tileSize, window.get_height() - 1), rgb(0, 60, 0))
+                    grid.drawLine(vec2(0, y * tileSize), vec2(window.get_width() - 1, y * tileSize), rgb(0, 60, 0))
+        else:
+            grid.clear()
+        
+    if key == "W" and valocity_y != 1:
+        lastKeys.append("W")
+    if key == "A" and valocity_x != 1:
+        lastKeys.append("A")
+    if key == "S" and valocity_y != -1:
+        lastKeys.append("S")
+    if key == "D" and valocity_x != -1:
+        lastKeys.append("D")
+
+    if key == "R":
+        if startGame:
+            HighScore = len(SnakeBody) if len(SnakeBody) > HighScore else HighScore
+            startGame = False
+            isGameOver = True
+            timer.stop()
+
+input.set_wasPressed(wasKeyPressed)
+
 def gameLoop():
     global drawGrid
     global tileSize
@@ -181,32 +223,6 @@ def gameLoop():
     if window.getTimeDiff() >= 1:
         print(window.getFPS())
 
-    if window.wasKeyPressed("Z"):
-        drawGrid = not drawGrid
-        if not drawGrid:
-            for x in range(1, window.get_width() // tileSize):
-                for y in range(1, window.get_height() // tileSize):
-                    grid.drawLine(vec2(x * tileSize, 0), vec2(x * tileSize, window.get_height() - 1), rgb(0, 60, 0))
-                    grid.drawLine(vec2(0, y * tileSize), vec2(window.get_width() - 1, y * tileSize), rgb(0, 60, 0))
-        else:
-            grid.clear()
-        
-    if window.wasKeyPressed("W") and valocity_y != 1:
-        lastKeys.append("W")
-    if window.wasKeyPressed("A") and valocity_x != 1:
-        lastKeys.append("A")
-    if window.wasKeyPressed("S") and valocity_y != -1:
-        lastKeys.append("S")
-    if window.wasKeyPressed("D") and valocity_x != -1:
-        lastKeys.append("D")
-
-    if window.wasKeyPressed("R"):
-        if startGame:
-            HighScore = len(SnakeBody) if len(SnakeBody) > HighScore else HighScore
-            startGame = False
-            isGameOver = True
-            timer.stop()
-
     window.drawSurface(vec2(0, 0), grid)
 
     if startGame:
@@ -219,6 +235,24 @@ def gameLoop():
         window.drawRect(SnakeHead, tileSize, tileSize, rgb(0, 160, 0), lineDepth=3)
         window.drawText(vec2(window.get_width() - 50, 13), 80, tileSize, f"Score: {len(SnakeBody)}")
         window.drawText(vec2(window.get_width() - 67, 35), 120, tileSize, f"HighScore: {HighScore}")
+    elif win:
+        timer.stop()
+        window.drawRect(Apple, tileSize, tileSize, rgb(150, 0, 0))
+        window.drawRect(Apple, tileSize, tileSize, rgb(120, 0, 0), lineDepth=3)
+        for tile in SnakeBody:
+            window.drawRect(tile, tileSize, tileSize, rgb(0, 160, 0))
+            window.drawRect(tile, tileSize, tileSize, rgb(0, 120, 0), lineDepth=3)
+        window.drawRect(SnakeHead, tileSize, tileSize, rgb(0, 120, 0))
+        window.drawRect(SnakeHead, tileSize, tileSize, rgb(0, 160, 0), lineDepth=3)
+        window.drawText(vec2(window.get_width() // 2, (window.get_height() // 2) - 120), 400, tileSize*4, "You Win", rgb(0, 170, 0))
+        window.drawText(vec2(window.get_width() // 2, (window.get_height() // 2) - 65), 240, tileSize*3, f"Score: {len(SnakeBody)}")
+        window.drawText(vec2(window.get_width() // 2, (window.get_height() // 2) - 25), 240, tileSize*2, f"HighScore: {HighScore}")
+        retryButton.draw(window, 0, "Arial", rgb(0, 0, 60), True, 3, rgb(250, 232, 14), rgb(147, 24, 0))
+        quitButton.draw(window, 0, "Arial", rgb(0, 0, 60), True, 3, rgb(250, 232, 14), rgb(147, 24, 0))
+        window.drawText(vec2(tileSize * 2, tileSize // 2), tileSize * 4, tileSize, "Tunneling")
+        tunnelingButton.draw(window, 0, "Arial", rgb(0, 0, 0), True, int(tileSize * 0.2), rgb(255, 255, 255), rgb(0, 0 ,0))
+        if tunneling:
+            window.drawRect(vec2((tileSize * 4) + tileSize // 2, tileSize // 2), tileSize, tileSize, rgb(0, 0, 0))
     elif isGameOver:
         timer.stop()
         window.drawRect(Apple, tileSize, tileSize, rgb(150, 0, 0))
@@ -248,6 +282,6 @@ def gameLoop():
             window.drawRect(vec2((tileSize * 4) + tileSize // 2, tileSize // 2), tileSize, tileSize, rgb(0, 0, 0))
     return
 
-window.startGameLoop(gameLoop, "ESCAPE", 60)
+window.startGameLoop(gameLoop, "ESCAPE", 60, input)
 
 quit()

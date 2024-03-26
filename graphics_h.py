@@ -2,11 +2,12 @@ from collections.abc import Callable
 from typing import List, Tuple, Union, Dict
 from dataclasses import dataclass, field
 import pygame as pg, pygame
-from pygame.time import Clock
 import time
 import threading
 from math import sqrt
 import sys
+
+__all__ = ["Timer", "Button", "InputListener", "Surface", "Window", "vec2", "rgb", "rgba", "init", "quit"]
 
 keys = {
     pygame.K_a: "A",
@@ -151,7 +152,7 @@ class vec2:
         if magnitude == 0:
             return vec2(0, 0)
         else:
-            return vec2(self.x / magnitude, self.y / magnitude)
+            return vec2(int(self.x // magnitude), int(self.y // magnitude))
 
 @dataclass(frozen=True, eq=True)
 class rgba:
@@ -255,8 +256,8 @@ class Texture:
     def apply(self, window: pg.Surface, mask: pg.Surface, topleft: vec2, transparency) -> None:
         window.blit(self.apply_alpha(mask, transparency), topleft.get())
 
-    #def set_colorkey(self, color: Union[rgb, rgba]) -> None:
-        #self.texture.set_colorkey(color.get())
+    def set_colorkey(self, color: Union[rgb, rgba]) -> None:
+        self.texture.set_colorkey(color.get())
 
     def rotate(self, rotation: int) -> None:
         if self.texture:
@@ -297,7 +298,7 @@ def getFontDimensions(text: str, font_style: Union[None, str], width: int, heigh
 @dataclass(frozen=True, eq=True)
 class Text:
     text: str
-    style: str
+    style: Union[None, str] = None
     text_surface: pg.Surface = field(init=False, compare=False)
     loaded: bool = field(init=False, compare=False, default=False)
 
@@ -312,7 +313,6 @@ class Text:
         self.text_surface.set_alpha(alpha)
 
     def rotate(self, rotation: int = 0) -> None:
-        #print(self.text_surface)
         object.__setattr__(self, 'text_surface', pg.transform.rotate(self.text_surface, -rotation))
 
     def size(self) -> Tuple[int, int]:
@@ -339,21 +339,21 @@ class Button:
         if self.range.collidepoint(*pos.get()):
             self.runOnClick()
 
-    def draw(self, window: 'Window', design: int = 0, fontStyle: Union[str, None] = None, fontColor: rgb = rgb(0, 0, 0), outlined: bool = False, outline_depth: int = 0, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), outlineColor: Union[rgb, rgba] = rgba(255, 255, 255, 255), border_radius: int = 20, texture: Union[None, Texture] = None, outlineTexture: Union[None, Texture] = None, scaled: bool = True, scaledOutline: bool = True, transparency: int = 255, transparencyOutline: int = 255, rotation: int = 0) -> None:
+    def draw(self, window: 'Window', design: int = 0, fontStyle: Union[str, None] = None, fontColor: rgb = rgb(0, 0, 0), outlined: bool = False, outline_depth: int = 0, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), outlineColor: Union[rgb, rgba] = rgba(255, 255, 255, 255), border_radius: int = 20, texture: Union[None, str] = None, outlineTexture: Union[None, str] = None, transparency: int = 255, transparencyOutline: int = 255, rotation: int = 0) -> None:
         self.isDrawn = True
         if design == 0:
-            window.drawRect(self.pos, self.width, self.height, color, texture, scaled=scaled, transparency=transparency, rotation=rotation)
+            window.drawRect(self.pos, self.width, self.height, color, texture, transparency=transparency, rotation=rotation)
             if outlined:
-                window.drawRect(self.pos, self.width, self.height, outlineColor, outlineTexture, scaled=scaledOutline, transparency=transparencyOutline, rotation=rotation, lineDepth=outline_depth)
+                window.drawRect(self.pos, self.width, self.height, outlineColor, outlineTexture, transparency=transparencyOutline, rotation=rotation, lineDepth=outline_depth)
         elif design == 1:
-            window.drawRect(self.pos, self.width, self.height, color, texture, scaled=scaled, transparency=transparency, rotation=rotation, border_radius=border_radius)
+            window.drawRect(self.pos, self.width, self.height, color, texture, transparency=transparency, rotation=rotation, border_radius=border_radius)
             if outlined:
-                window.drawRect(self.pos, self.width, self.height, outlineColor, outlineTexture, scaled=scaledOutline, transparency=transparencyOutline, rotation=rotation, border_radius=border_radius, lineDepth=outline_depth)
+                window.drawRect(self.pos, self.width, self.height, outlineColor, outlineTexture, transparency=transparencyOutline, rotation=rotation, border_radius=border_radius, lineDepth=outline_depth)
         if self.label != None:
             window.drawText(self.pos, self.width, self.height - ((self.height // 2) // 4), self.label, fontColor, fontStyle, rotation=rotation, transparency=transparency)
 
     def drawHitbox(self, screen: pg.Surface, color: Union[rgb, rgba] = rgba(150, 0 ,0, 255)) -> None:
-        pg.draw.rect(screen, color.get(), (self.x, self.y, self.width, self.height), 1)
+        pg.draw.rect(screen, color.get(), (self.topx, self.topy, self.width, self.height), 1)
 
 initialized_texts: List[Text] = []
 initialized_textures: List[Texture] = []
@@ -445,7 +445,7 @@ class Surface:
                 texture = filtered[-1]
             texture.convert(width, height)
             texture.rotate(rotation)
-            texture.apply(self.screen, mask, topleft, transparency)
+            texture.apply(self.surf, mask, topleft, transparency)
             texture.reset()
         else:
             self.surf.blit(mask, topleft.get())
@@ -467,23 +467,8 @@ class Surface:
     def get(self) -> pg.Surface:
         return self.surf
 
-class Window:
-    def __init__(self, width: int, height: int, caption: str, caption_icon: str = "none", window_flags: int = 0) -> None:
-        self.screen: pg.Surface = pg.display.set_mode((width, height), window_flags)
-        pg.display.set_caption(caption)
-        if caption_icon != "none":
-            pg.display.set_icon(pg.image.load(caption_icon))
-
-        self.clock = pg.time.Clock()
-        self.running: bool = False
-
-        self.ClearColor: rgb = rgb(0, 0, 0)
-        
-        self.hitboxColor: Union[rgb, rgba] = rgb(0,0,0)
-        self.drawHitboxes: bool = False
-
-        self.visual_buttons: List[Button] = []
-
+class InputListener:
+    def __init__(self) -> None:
         self.keys_down: Dict[str, bool] = { key_name: False for key_name in keys.values() }
         self.just_pressed_keys: List[str] = []
         self.just_released_keys: List[str] = []
@@ -495,6 +480,122 @@ class Window:
         self.buttons_down: Dict[str, bool] = { button_name: False for button_name in mouse_buttons.values() }
         self.just_pressed_buttons: List[str] = []
         self.just_released_buttons: List[str] = []
+
+        self.isPressed: Union[None, Callable[[str], None]] = None
+        self.wasPressed: Union[None, Callable[[str], None]] = None
+        self.wasReleased: Union[None, Callable[[str], None]] = None
+
+
+    def set_wasPressed(self, function: Callable[[str], None]) -> None:
+        self.wasPressed = function
+
+    def set_wasReleased(self, function: Callable[[str], None]) -> None:
+        self.wasReleased = function
+
+    def set_isPressed(self, function: Callable[[str], None]) -> None:
+        self.isPressed = function
+
+    def _set_key(self, key: str, isPressed: bool) -> None:
+        self.keys_down[key] = isPressed
+        if isPressed:
+            self.just_pressed_keys.append(key)
+        else:
+            self.just_released_keys.append(key)
+
+    def _set_button(self, button: str, isPressed: bool) -> None:
+        self.buttons_down[button] = isPressed
+        if isPressed:
+            self.just_pressed_buttons.append(button)
+        else:
+            self.just_released_buttons.append(button)
+
+    def _set_dir(self, dir: str, isDir: bool) -> None:
+        self.ScrollDIR[dir] = isDir
+    
+    def _set_mouse_moved(self, hasMoved: bool) -> None:
+        self.Mouse_Moved = hasMoved
+
+    def _set_scroll_speed(self, speed: int) -> None:
+        self.ScrollSpeed = speed
+
+    def _call(self) -> None:
+        for key in self.keys_down:
+            if key:
+                if self.isPressed:
+                    self.isPressed(key)
+
+        for button in self.buttons_down:
+            if button:
+                if self.isPressed:
+                    self.isPressed(button)
+
+    def _call_wasPressed(self, key: str) -> None:
+        if self.wasPressed:
+            self.wasPressed(key)
+
+    def _call_wasReleased(self, key: str) -> None:
+        if self.wasReleased: 
+            self.wasReleased(key)
+
+    def _clear(self) -> None:
+        self.just_pressed_keys.clear()
+        self.just_released_keys.clear()
+        self.just_pressed_buttons.clear()
+        self.just_released_buttons.clear()
+
+    def isKeyPressed(self, key: str) -> bool:
+        return self.keys_down.get(key, False)
+
+    def wasKeyPressed(self, key: str) -> bool:
+        if key in self.just_pressed_keys:
+            return True
+        return False
+
+    def wasKeyReleased(self, key: str) -> bool:
+        if key in self.just_released_keys:
+            return True
+        return False
+
+    def isButtonPressed(self, button: str) -> bool:
+        return self.buttons_down.get(button, False)
+
+    def wasButtonPressed(self, button: str) -> bool:
+        if button in self.just_pressed_buttons:
+            return True
+        return False
+
+    def wasButtonReleased(self, button: str) -> bool:
+        if button in self.just_released_buttons:
+            return True
+        return False
+
+    def isScrollDir(self, dir: str) -> bool:
+        return self.ScrollDIR.get(dir, False)
+
+    def getScrollSpeed(self) -> int:
+        return self.ScrollSpeed
+
+    def hasMouseMoved(self) -> bool:
+        return self.Mouse_Moved
+
+class Window:
+    def __init__(self, width: int, height: int, caption: str, caption_icon: str = "none", window_flags: int = 0, double_buffering: bool = False) -> None:
+        self.screen: pg.Surface = pg.display.set_mode((width, height), window_flags)
+        pg.display.set_caption(caption)
+        if caption_icon != "none":
+            pg.display.set_icon(pg.image.load(caption_icon))
+        self.db = double_buffering
+        
+
+        self.clock = pg.time.Clock()
+        self.running: bool = False
+
+        self.ClearColor: rgb = rgb(0, 0, 0)
+        
+        self.hitboxColor: Union[rgb, rgba] = rgb(0,0,0)
+        self.drawHitboxes: bool = False
+
+        self.visual_buttons: List[Button] = []
 
         self.escape_sequence: Union[Tuple[str, ...], str] = "ESCAPE"
         self.framerate: int = 60
@@ -611,48 +712,13 @@ class Window:
     def drawSurface(self, topleft: vec2, surface: Surface) -> None:
         self.screen.blit(surface.get(), topleft.get())
 
-    def isKeyPressed(self, key: str) -> bool:
-        return self.keys_down.get(key, False)
-
-    def wasKeyPressed(self, key: str) -> bool:
-        if key in self.just_pressed_keys:
-            return True
-        return False
-
-    def wasKeyReleased(self, key: str) -> bool:
-        if key in self.just_released_keys:
-            return True
-        return False
-
-    def isButtonPressed(self, button: str) -> bool:
-        return self.buttons_down.get(button, False)
-
-    def wasButtonPressed(self, button: str) -> bool:
-        if button in self.just_pressed_buttons:
-            return True
-        return False
-
-    def wasButtonReleased(self, button: str) -> bool:
-        if button in self.just_released_buttons:
-            return True
-        return False
-
-    def isScrollDir(self, dir: str) -> bool:
-        return self.ScrollDIR.get(dir, False)
-
     def getMousePos(self) -> vec2:
         return vec2(pg.mouse.get_pos()[0], pg.mouse.get_pos()[1])
-
-    def getScrollSpeed(self) -> int:
-        return self.ScrollSpeed
-
-    def hasMouseMoved(self) -> bool:
-        return self.Mouse_Moved
 
     def addButton(self, button: Button) -> None :
         self.visual_buttons.append(button)
 
-    def setClearColor(self, color: Union[rgb, rgba]) -> None:
+    def setClearColor(self, color: rgb) -> None:
         self.ClearColor = color
 
     def get_width(self) -> int:
@@ -667,7 +733,7 @@ class Window:
     def clear(self) -> None:
         self.screen.fill(self.ClearColor.get())
 
-    def startGameLoop(self, gameLoop: Callable, escape_sequence: Union[Tuple[str, ...], str], framerate: int) -> None:
+    def startGameLoop(self, gameLoop: Callable, escape_sequence: Union[Tuple[str, ...], str], framerate: int, input: Union[None, InputListener] = None) -> None:
         self.escape_sequence = escape_sequence
         self.framerate = framerate
 
@@ -678,54 +744,55 @@ class Window:
             self.current = pg.time.get_ticks()
             self.last_time = self.current
 
-            self.just_pressed_keys.clear()
-            self.just_pressed_buttons.clear()
-            self.just_released_keys.clear()
-            self.just_released_buttons.clear()
+            if input:
+                input._clear()
+
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     self.running = False
-                if event.type == pg.KEYDOWN:
-                    if event.key in keys:
-                        self.keys_down[keys[event.key]] = True
-                        self.just_pressed_keys.append(keys[event.key])
+                if input:
+                    if event.type == pg.KEYDOWN:
+                        if event.key in keys:
+                            input._set_key(keys[event.key], True)
+                            input._call_wasPressed(keys[event.key])
                     escape = False
                     if isinstance(escape_sequence, str):
-                        escape = self.isKeyPressed(escape_sequence)     
+                        escape = input.isKeyPressed(escape_sequence)     
                     else:
-                        escape = all(self.isKeyPressed(key) for key in escape_sequence)    
+                        escape = all(input.isKeyPressed(key) for key in escape_sequence)    
                     if escape:
                         self.running = False
-                elif event.type == pg.KEYUP:
-                    if event.key in keys:
-                        self.keys_down[keys[event.key]] = False
-                        self.just_released_keys.append(keys[event.key])
-                elif event.type == pg.MOUSEBUTTONDOWN:
-                    if event.button in mouse_buttons:
-                        self.buttons_down[mouse_buttons[event.button]] = True
-                        self.just_pressed_buttons.append(mouse_buttons[event.button])
-                elif event.type == pg.MOUSEBUTTONUP:
-                    if event.button in mouse_buttons:
-                        self.buttons_down[mouse_buttons[event.button]] = False
-                        self.just_released_buttons.append(mouse_buttons[event.button])
-                if event.type == pg.MOUSEWHEEL:
-                    self.ScrollSpeed = event.y
-                    if event.y > 0:
-                        self.ScrollDIR["UP"] = True
-                        self.ScrollDIR["DOWN"] = False
-                    elif event.y < 0: 
-                        self.ScrollDIR["UP"] = False
-                        self.ScrollDIR["DOWN"] = True
-                else:
-                    self.ScrollSpeed = 0
-                if event.type == pg.MOUSEMOTION:
-                    self.Mouse_Moved = True
-                else:
-                    self.Mouse_Moved = False
+                    elif event.type == pg.KEYUP:
+                        if event.key in keys:
+                            input._set_key(keys[event.key], False)
+                            input._call_wasReleased(keys[event.key])
+                    elif event.type == pg.MOUSEBUTTONDOWN:
+                        if event.button in mouse_buttons:
+                            input._set_button(mouse_buttons[event.button], True)
+                    elif event.type == pg.MOUSEBUTTONUP:
+                        if event.button in mouse_buttons:
+                            input._set_button(mouse_buttons[event.button], False)
+                    if event.type == pg.MOUSEWHEEL:
+                        input._set_scroll_speed(event.y)
+                        if event.y > 0:
+                            input._set_dir("UP", True)
+                            input._set_dir("DOWN", False)
+                        elif event.y < 0: 
+                            input._set_dir("UP", True)
+                            input._set_dir("DOWN", False)
+                    else:
+                        input._set_scroll_speed(0)
+                    if event.type == pg.MOUSEMOTION:
+                        input._set_mouse_moved(True)
+                    else:
+                        input._set_mouse_moved(True)
 
-            if self.ScrollSpeed == 0:
-                self.ScrollDIR["UP"] = False
-                self.ScrollDIR["DOWN"] = False
+                    if input.getScrollSpeed():
+                        input._set_dir("UP", False)
+                        input._set_dir("DOWN", False)
+
+                    input._call()
+                
 
             if not self.running:
                 break     
@@ -739,17 +806,18 @@ class Window:
                 for button in self.visual_buttons:
                     if button.isDrawn:
                         button.drawHitbox(self.screen, self.hitboxColor)
-
-            if self.wasButtonPressed("LEFT"):
-                for button in self.visual_buttons:
-                    if button.isDrawn:
-                        button.onClick(self.getMousePos())
+            
+            if input:
+                if input.wasButtonPressed("LEFT"):
+                    for button in self.visual_buttons:
+                        if button.isDrawn:
+                            button.onClick(self.getMousePos())
 
             if self.getTimeDiff() >= 1:
                 self.fps = self.clock.get_fps()
                 self.last_update = self.current
 
-            pg.display.update()
+            pg.display.update() if not self.db else pg.display.flip()
             self.clock.tick(self.framerate)
 
     def quit(self) -> None:
