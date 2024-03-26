@@ -200,6 +200,7 @@ class Timer:
         self.delay = delay
         self.task = task
         self.running = False
+        self.paused = False
         self.thread = None
         self.stop_flag = threading.Event()
 
@@ -472,7 +473,7 @@ class Surface:
             text_instance = filtered[-1]
         text_instance.set_alpha(transparency)
         text_instance.rotate(rotation)
-        self.surf.blit(text_instance._get(width - ((width // 2) // 4), height - ((height // 2) // 4)), vec2(topleft.x + ((width // 2) // 4) // 2, topleft.y + ((height // 2) // 4) // 2)._get())
+        self.surf.blit(text_instance.get(width - ((width // 2) // 4), height - ((height // 2) // 4)), vec2(topleft.x + ((width // 2) // 4) // 2, topleft.y + ((height // 2) // 4) // 2)._get())
         
     def _get(self) -> pg.Surface:
         return self.surf
@@ -554,7 +555,7 @@ class InputListener:
         self.just_released_buttons.clear()
 
     def isKeyPressed(self, key: str) -> bool:
-        return self.keys_down._get(key, False)
+        return self.keys_down.get(key, False)
 
     def wasKeyPressed(self, key: str) -> bool:
         if key in self.just_pressed_keys:
@@ -567,7 +568,7 @@ class InputListener:
         return False
 
     def isButtonPressed(self, button: str) -> bool:
-        return self.buttons_down._get(button, False)
+        return self.buttons_down.get(button, False)
 
     def wasButtonPressed(self, button: str) -> bool:
         if button in self.just_pressed_buttons:
@@ -580,7 +581,7 @@ class InputListener:
         return False
 
     def isScrollDir(self, dir: str) -> bool:
-        return self.ScrollDIR._get(dir, False)
+        return self.ScrollDIR.get(dir, False)
 
     def getScrollSpeed(self) -> int:
         return self.ScrollSpeed
@@ -590,7 +591,7 @@ class InputListener:
 
 class Window:
     def __init__(self, width: int, height: int, caption: str, caption_icon: str = "none", window_flags: List[int] = []) -> None:
-        flags = reduce(lambda x, y: x | y, window_flags)
+        flags = reduce(lambda x, y: x | y, window_flags) if len(window_flags) > 0 else 0
         self.screen: pg.Surface = pg.display.set_mode((width, height), flags)
         pg.display.set_caption(caption)
         if caption_icon != "none":
@@ -719,7 +720,7 @@ class Window:
             text_instance = filtered[-1]
         text_instance.set_alpha(transparency)
         text_instance.rotate(rotation)
-        self.screen.blit(text_instance._get(width - ((width // 2) // 4), height - ((height // 2) // 4)), vec2(topleft.x + ((width // 2) // 4) // 2, topleft.y + ((height // 2) // 4) // 2)._get())
+        self.screen.blit(text_instance.get(width - ((width // 2) // 4), height - ((height // 2) // 4)), vec2(topleft.x + ((width // 2) // 4) // 2, topleft.y + ((height // 2) // 4) // 2)._get())
 
     def drawSurface(self, topleft: vec2, surface: Surface) -> None:
         self.screen.blit(surface._get(), topleft._get())
@@ -759,7 +760,7 @@ class Window:
             if input:
                 input._clear()
 
-            for event in pg.event._get():
+            for event in pg.event.get():
                 if event.type == pg.QUIT:
                     self.running = False
                 if input:
@@ -817,13 +818,13 @@ class Window:
             if self.drawHitboxes:
                 for button in self.visual_buttons:
                     if button.isDrawn:
-                        button.drawHitbox(self.screen, self.hitboxColor)
+                        button._drawHitbox(self.screen, self.hitboxColor)
             
             if input:
                 if input.wasButtonPressed("LEFT"):
                     for button in self.visual_buttons:
                         if button.isDrawn:
-                            button.onClick(self.getMousePos())
+                            button._onClick(self.getMousePos())
 
             if self.getTimeDiff() >= 1:
                 self.fps = self.clock.get_fps()
