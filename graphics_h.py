@@ -136,14 +136,17 @@ class vec2:
     def _get(self) -> Tuple[int, int]:
         return (self.x, self.y)
     
-    def __mul__(self, other: 'vec2') -> int:
-        return self.x * other.x + self.y * other.y
+    def __mul__(self, factor: int) -> 'vec2':
+        return vec2(self.x * factor, self.y * factor)
     
     def __add__(self, other: 'vec2') -> 'vec2':
         return vec2(self.x + other.x, self.y + other.y)
     
     def __sub__(self, other: 'vec2') -> 'vec2':
         return vec2(self.x - other.x, self.y - other.y)
+    
+    def dot(self, other: 'vec2') -> int:
+        return self.x*other.x + self.y*other.y
     
     def norm(self) -> float:
         return sqrt(self.x ** 2 + self.y ** 2)
