@@ -404,7 +404,7 @@ Runs the given gameLoop at the given frame rate while the game is running listen
 #### quit
 Stops gameLoop and closes window
 
-[Example]("./test_new.py)
+[Example](test_new.py)
 
 ## Key and Button List<a name="keyList"></a>
 ### Keys:
