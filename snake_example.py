@@ -31,7 +31,7 @@ valocity_y: int = 0
 
 lastKeys: List[str] = ["None"]
 
-grid: Surface = Surface(*window.getSize())
+grid: Surface = Surface(*window.get_size())
 
 HighScore: int = 0
 
