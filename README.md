@@ -22,7 +22,7 @@ def gameLoop():
     ...
     return
 
-window.starGameLoop(gameLoop, escape_sequence: Union[Tuple[str, ...], str], framerate: int)
+window.starGameLoop(gameLoop, escape_sequence: Union[Tuple[str, ...], str], framerate: int, input: InputListener)
 ```
 
 ## Classes
