@@ -86,7 +86,7 @@ vect2 = vec2(43, 20)
 vect3 = vect1 - vect2 ## returns: vec2(7, 68)
 ```
 
-##### dot product
+##### dot/scalar product
 Returns the projection of vector 1 to vector 2
 ``` python
 vect1 = vec2(5, 2)
