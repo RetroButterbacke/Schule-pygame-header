@@ -682,10 +682,10 @@ class Window:
             texture.rotate(rotation)
             if colorkey:
                 texture.set_colorkey(colorkey)
-            texture.apply(self.surf, mask, topleft, transparency)
+            texture.apply(self.screen, mask, topleft, transparency)
             texture.reset()
         else:
-            self.surf.blit(mask, topleft._get())
+            self.screen.blit(mask, topleft._get())
 
     def drawCircle(self, pos: vec2, radius: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, colorkey: Union[rgb, None] = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_textures
@@ -708,10 +708,10 @@ class Window:
             texture.rotate(rotation)
             if colorkey:
                 texture.set_colorkey(colorkey)
-            texture.apply(self.surf, mask, topleft, transparency)
+            texture.apply(self.screen, mask, topleft, transparency)
             texture.reset()
         else:
-            self.surf.blit(mask, topleft._get())
+            self.screen.blit(mask, topleft._get())
 
     def drawTriangle(self, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, colorkey: Union[rgb, None] = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_textures
@@ -734,10 +734,10 @@ class Window:
             texture.rotate(rotation)
             if colorkey:
                 texture.set_colorkey(colorkey)
-            texture.apply(self.surf, mask, topleft, transparency)
+            texture.apply(self.screen, mask, topleft, transparency)
             texture.reset()
         else:
-            self.surf.blit(mask, topleft._get())
+            self.screen.blit(mask, topleft._get())
         
     def drawTexture(self, pos: vec2, width: int, height: int, texturePath: str, *, colorkey: Union[rgb, None] = None, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_textures
@@ -753,7 +753,7 @@ class Window:
         texture.rotate(rotation)
         if colorkey:
             texture.set_colorkey(colorkey)
-        texture.apply(self.surf, self.surf, topleft, transparency)
+        texture.apply(self.screen, self.surf, topleft, transparency)
         texture.reset()
 
     def drawText(self, pos: vec2, width: int, height: int, text: str, color: Union[rgb, rgba] = rgba(0, 0, 0, 255), fontStyle: Union[None, str] = None, *, rotation: int = 0, transparency: int = 255) -> None:
@@ -761,17 +761,17 @@ class Window:
         topleft: vec2 = pos.convert(width, height, "tl")
         text_instance: Text = Text(text, fontStyle)
         if not text_instance in initialized_texts:
-            text_instance.load(self.surf.get_width(), self.surf.get_height(), color)
+            text_instance.load(self.screen.get_width(), self.screen.get_height(), color)
             initialized_texts.append(text_instance)
         else:
             filtered = list(filter(lambda x: x == text_instance, initialized_texts))
             text_instance = filtered[-1]
         text_instance.set_alpha(transparency)
         text_instance.rotate(rotation)
-        self.surf.blit(text_instance.get(width - ((width // 2) // 4), height - ((height // 2) // 4)), vec2(topleft.x + ((width // 2) // 4) // 2, topleft.y + ((height // 2) // 4) // 2)._get())
+        self.screen.blit(text_instance.get(width - ((width // 2) // 4), height - ((height // 2) // 4)), vec2(topleft.x + ((width // 2) // 4) // 2, topleft.y + ((height // 2) // 4) // 2)._get())
 
     def drawSurface(self, topleft: vec2, surface: 'Surface') -> None:
-        self.surf.blit(surface._get(), topleft._get())
+        self.screen.blit(surface._get(), topleft._get())
 
     def getMousePos(self) -> vec2:
         return vec2(pg.mouse.get_pos()[0], pg.mouse.get_pos()[1])
