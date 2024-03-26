@@ -1,99 +1,100 @@
 from collections.abc import Callable
 from typing import List, Tuple, Union, Dict
+from functools import reduce
 from dataclasses import dataclass, field
-import pygame as pg, pygame
+import pygame as pg
 import time
 import threading
 from math import sqrt
 import sys
 
-__all__ = ["Timer", "Button", "InputListener", "Surface", "Window", "vec2", "rgb", "rgba", "init", "quit"]
+__all__ = ["vec2", "rgb", "rgba", "Timer", "Button", "InputListener", "Surface", "Window", "init", "quit"]
 
 keys = {
-    pygame.K_a: "A",
-    pygame.K_b: "B",
-    pygame.K_c: "C",
-    pygame.K_d: "D",
-    pygame.K_e: "E",
-    pygame.K_f: "F", 
-    pygame.K_g: "G",
-    pygame.K_h: "H",
-    pygame.K_i: "I",
-    pygame.K_j: "J",
-    pygame.K_k: "K",
-    pygame.K_l: "L",
-    pygame.K_m: "M",
-    pygame.K_n: "N",
-    pygame.K_o: "O",
-    pygame.K_p: "P",
-    pygame.K_q: "Q",
-    pygame.K_r: "R",
-    pygame.K_s: "S",
-    pygame.K_t: "T",
-    pygame.K_u: "U",
-    pygame.K_v: "V",
-    pygame.K_w: "W",
-    pygame.K_x: "X",
-    pygame.K_y: "Y",
-    pygame.K_z: "Z",
+    pg.K_a: "A",
+    pg.K_b: "B",
+    pg.K_c: "C",
+    pg.K_d: "D",
+    pg.K_e: "E",
+    pg.K_f: "F", 
+    pg.K_g: "G",
+    pg.K_h: "H",
+    pg.K_i: "I",
+    pg.K_j: "J",
+    pg.K_k: "K",
+    pg.K_l: "L",
+    pg.K_m: "M",
+    pg.K_n: "N",
+    pg.K_o: "O",
+    pg.K_p: "P",
+    pg.K_q: "Q",
+    pg.K_r: "R",
+    pg.K_s: "S",
+    pg.K_t: "T",
+    pg.K_u: "U",
+    pg.K_v: "V",
+    pg.K_w: "W",
+    pg.K_x: "X",
+    pg.K_y: "Y",
+    pg.K_z: "Z",
 
-    pygame.K_0: "0",
-    pygame.K_1: "1",
-    pygame.K_2: "2",
-    pygame.K_3: "3",
-    pygame.K_4: "4",
-    pygame.K_5: "5",
-    pygame.K_6: "6",
-    pygame.K_7: "7",
-    pygame.K_8: "8",
-    pygame.K_9: "9",
+    pg.K_0: "0",
+    pg.K_1: "1",
+    pg.K_2: "2",
+    pg.K_3: "3",
+    pg.K_4: "4",
+    pg.K_5: "5",
+    pg.K_6: "6",
+    pg.K_7: "7",
+    pg.K_8: "8",
+    pg.K_9: "9",
 
-    pygame.K_RETURN: "RETURN",
-    pygame.K_ESCAPE: "ESCAPE",
-    pygame.K_BACKSPACE: "BACKSPACE",
-    pygame.K_TAB: "TAB",
-    pygame.K_SPACE: "SPACE",
+    pg.K_RETURN: "RETURN",
+    pg.K_ESCAPE: "ESCAPE",
+    pg.K_BACKSPACE: "BACKSPACE",
+    pg.K_TAB: "TAB",
+    pg.K_SPACE: "SPACE",
 
-    pygame.K_UP: "UP",
-    pygame.K_DOWN: "DOWN",
-    pygame.K_LEFT: "LEFT",
-    pygame.K_RIGHT: "RIGHT",
+    pg.K_UP: "UP",
+    pg.K_DOWN: "DOWN",
+    pg.K_LEFT: "LEFT",
+    pg.K_RIGHT: "RIGHT",
 
-    pygame.K_LCTRL: "LEFT CTRL",
-    pygame.K_RCTRL: "RIGHT CTRL",
-    pygame.K_LSHIFT: "LEFT SHIFT",
-    pygame.K_RSHIFT: "RIGHT SHIFT",
-    pygame.K_LALT: "LEFT ALT",
-    pygame.K_RALT: "RIGHT ALT",
+    pg.K_LCTRL: "LEFT CTRL",
+    pg.K_RCTRL: "RIGHT CTRL",
+    pg.K_LSHIFT: "LEFT SHIFT",
+    pg.K_RSHIFT: "RIGHT SHIFT",
+    pg.K_LALT: "LEFT ALT",
+    pg.K_RALT: "RIGHT ALT",
 
-    pygame.K_KP0: "KP_0",
-    pygame.K_KP1: "KP_1",
-    pygame.K_KP2: "KP_2",
-    pygame.K_KP3: "KP_3",
-    pygame.K_KP4: "KP_4",
-    pygame.K_KP5: "KP_5",
-    pygame.K_KP6: "KP_6",
-    pygame.K_KP7: "KP_7",
-    pygame.K_KP8: "KP_8",
-    pygame.K_KP9: "KP_9",
-    pygame.K_KP_ENTER: "KEYPAD ENTER",
-    pygame.K_KP_PLUS: "KEYPAD PLUS",
-    pygame.K_KP_MINUS: "KEYPAD MINUS",
-    pygame.K_KP_MULTIPLY: "KEYPAD MULTIPLY",
-    pygame.K_KP_DIVIDE: "KEYPAD DIVIDE",
+    pg.K_KP0: "KP_0",
+    pg.K_KP1: "KP_1",
+    pg.K_KP2: "KP_2",
+    pg.K_KP3: "KP_3",
+    pg.K_KP4: "KP_4",
+    pg.K_KP5: "KP_5",
+    pg.K_KP6: "KP_6",
+    pg.K_KP7: "KP_7",
+    pg.K_KP8: "KP_8",
+    pg.K_KP9: "KP_9",
+    pg.K_KP_ENTER: "KEYPAD ENTER",
+    pg.K_KP_PLUS: "KEYPAD PLUS",
+    pg.K_KP_MINUS: "KEYPAD MINUS",
+    pg.K_KP_MULTIPLY: "KEYPAD MULTIPLY",
+    pg.K_KP_DIVIDE: "KEYPAD DIVIDE",
 
-    pygame.K_F1: "F1",
-    pygame.K_F2: "F2",
-    pygame.K_F3: "F3",
-    pygame.K_F4: "F4",
-    pygame.K_F5: "F5",
-    pygame.K_F6: "F6",
-    pygame.K_F7: "F7",
-    pygame.K_F8: "F8",
-    pygame.K_F9: "F9",
-    pygame.K_F10: "F10",
-    pygame.K_F11: "F11",
-    pygame.K_F12: "F12",
+    pg.K_F1: "F1",
+    pg.K_F2: "F2",
+    pg.K_F3: "F3",
+    pg.K_F4: "F4",
+    pg.K_F5: "F5",
+    pg.K_F6: "F6",
+    pg.K_F7: "F7",
+    pg.K_F8: "F8",
+    pg.K_F9: "F9",
+    pg.K_F10: "F10",
+    pg.K_F11: "F11",
+    pg.K_F12: "F12",
 }
 
 mouse_buttons = {
@@ -132,7 +133,7 @@ class vec2:
         elif modifier == "br":
             return vec2(self.x + width//2, self.y + height//2)
 
-    def get(self) -> Tuple[int, int]:
+    def _get(self) -> Tuple[int, int]:
         return (self.x, self.y)
     
     def __mul__(self, other: 'vec2') -> int:
@@ -171,7 +172,7 @@ class rgba:
         if self.alpha > 255 or self.alpha < 0:
             raise IndexError("Alpha value out of range. Range: 0..255")
 
-    def get(self) -> Tuple[int, int, int, int]:
+    def _get(self) -> Tuple[int, int, int, int]:
         return (self.red, self.green, self.blue, self.alpha)
 
 @dataclass(frozen=True, eq=True)
@@ -188,7 +189,7 @@ class rgb:
         if self.blue > 255 or self.blue < 0:
             raise IndexError("Blue value out of range. Range: 0..255")
 
-    def get(self) -> Tuple[int, int, int]:
+    def _get(self) -> Tuple[int, int, int]:
         return (self.red, self.green, self.blue)
 
     def getRGBA(self, alpha: int = 255) -> rgba:
@@ -208,7 +209,8 @@ class Timer:
             current_time = pg.time.get_ticks()
             if current_time - last_update >= self.delay:
                 last_update = current_time
-                self.task()
+                if not self.paused:
+                    self.task()
             time.sleep(0.01)
 
     def start(self) -> None:
@@ -217,6 +219,14 @@ class Timer:
             self.stop_flag.clear()
             self.thread = threading.Thread(target=self._run)
             self.thread.start()
+
+    def pause(self) -> None:
+        if self.running:
+            self.paused = True
+
+    def unpause(self) -> None:
+        if self.paused:
+            self.paused = False
 
     def stop(self) -> None:
         if self.running:
@@ -254,10 +264,10 @@ class Texture:
         return texture
     
     def apply(self, window: pg.Surface, mask: pg.Surface, topleft: vec2, transparency) -> None:
-        window.blit(self.apply_alpha(mask, transparency), topleft.get())
+        window.blit(self.apply_alpha(mask, transparency), topleft._get())
 
     def set_colorkey(self, color: Union[rgb, rgba]) -> None:
-        self.texture.set_colorkey(color.get())
+        self.texture.set_colorkey(color._get())
 
     def rotate(self, rotation: int) -> None:
         if self.texture:
@@ -273,7 +283,7 @@ class Texture:
     def get(self) -> pg.Surface:
         return self.texture
     
-def getFontDimensions(text: str, font_style: Union[None, str], width: int, height: int) -> int:
+def getFontSize(text: str, font_style: Union[None, str], width: int, height: int) -> int:
     font_size = 1
     font = pg.font.Font(pg.font.match_font(font_style), font_size) if font_style else pg.font.Font(None, font_size)
     text_surface = font.render(text, False, (0, 0, 0, 0))
@@ -304,9 +314,9 @@ class Text:
 
     def load(self, width: int, height: int, color: Union[rgb, rgba]) -> None:
         if not self.loaded:
-            font_size = getFontDimensions(self.text, self.style, width, height)
+            font_size = getFontSize(self.text, self.style, width, height)
             font = pg.font.Font(pg.font.match_font(self.style), font_size) if self.style else pg.font.Font(None, font_size)
-            object.__setattr__(self, 'text_surface', font.render(self.text, False, color.get()))
+            object.__setattr__(self, 'text_surface', font.render(self.text, False, color._get()))
             object.__setattr__(self, 'loaded', True)
 
     def set_alpha(self, alpha: int = 255) -> None:
@@ -335,8 +345,8 @@ class Button:
         self.runOnClick = runOnClick
         self.isDrawn: bool = False
 
-    def onClick(self, pos: vec2) -> None:
-        if self.range.collidepoint(*pos.get()):
+    def _onClick(self, pos: vec2) -> None:
+        if self.range.collidepoint(*pos._get()):
             self.runOnClick()
 
     def draw(self, window: 'Window', design: int = 0, fontStyle: Union[str, None] = None, fontColor: rgb = rgb(0, 0, 0), outlined: bool = False, outline_depth: int = 0, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), outlineColor: Union[rgb, rgba] = rgba(255, 255, 255, 255), border_radius: int = 20, texture: Union[None, str] = None, outlineTexture: Union[None, str] = None, transparency: int = 255, transparencyOutline: int = 255, rotation: int = 0) -> None:
@@ -352,8 +362,8 @@ class Button:
         if self.label != None:
             window.drawText(self.pos, self.width, self.height - ((self.height // 2) // 4), self.label, fontColor, fontStyle, rotation=rotation, transparency=transparency)
 
-    def drawHitbox(self, screen: pg.Surface, color: Union[rgb, rgba] = rgba(150, 0 ,0, 255)) -> None:
-        pg.draw.rect(screen, color.get(), (self.topx, self.topy, self.width, self.height), 1)
+    def _drawHitbox(self, screen: pg.Surface, color: Union[rgb, rgba] = rgba(150, 0 ,0, 255)) -> None:
+        pg.draw.rect(screen, color._get(), (self.topx, self.topy, self.width, self.height), 1)
 
 initialized_texts: List[Text] = []
 initialized_textures: List[Texture] = []
@@ -367,22 +377,22 @@ class Surface:
         self.ClearColor = color
 
     def clear(self):
-        self.surf.fill(self.ClearColor.get())
+        self.surf.fill(self.ClearColor._get())
 
     def set_colorkey(self, colorkey: Union[rgb, rgba]) -> None:
-        self.surf.set_colorkey(colorkey.get())
+        self.surf.set_colorkey(colorkey._get())
 
     def set_alpha(self, alpha: int) -> None:
         self.surf.set_alpha(alpha)
 
     def drawLine(self, pos1: vec2, pos2: vec2, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), depth: int = 1) -> None:
-        pg.draw.line(self.surf, color.get(), pos1.get(), pos2.get(), depth)
+        pg.draw.line(self.surf, color._get(), pos1._get(), pos2._get(), depth)
 
     def drawRect(self, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: int = 255, border_radius: int = 0) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(width, height, "tl")
         mask: pg.Surface = pg.Surface((width, height), pg.SRCALPHA)
-        pg.draw.rect(mask, color.get(), (0, 0, width, height), lineDepth, border_radius)
+        pg.draw.rect(mask, color._get(), (0, 0, width, height), lineDepth, border_radius)
         mask.set_alpha(transparency)
 
         mask = pg.transform.rotate(mask, -rotation)
@@ -400,13 +410,13 @@ class Surface:
             texture.apply(self.surf, mask, topleft, transparency)
             texture.reset()
         else:
-            self.surf.blit(mask, topleft.get())
+            self.surf.blit(mask, topleft._get())
 
     def drawCircle(self, pos: vec2, radius: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(radius * 2, radius * 2, "tl")
         mask: pg.Surface = pg.Surface((radius * 2, radius * 2), pg.SRCALPHA)
-        pg.draw.circle(mask, color.get(), (radius, radius), radius, lineDepth)
+        pg.draw.circle(mask, color._get(), (radius, radius), radius, lineDepth)
         mask.set_alpha(transparency)
 
         mask = pg.transform.rotate(mask, -rotation)
@@ -424,13 +434,13 @@ class Surface:
             texture.apply(self.surf, mask, topleft, transparency)
             texture.reset()
         else:
-            self.surf.blit(mask, topleft.get())
+            self.surf.blit(mask, topleft._get())
 
     def drawTriangle(self, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(width, height, "tl")
         mask: pg.Surface = pg.Surface((width, height), pg.SRCALPHA)
-        pg.draw.polygon(mask, color.get(), [((width//2) - 2, 0), (0, height - 2), (width - 2, height - 2)], lineDepth)
+        pg.draw.polygon(mask, color._get(), [((width//2) - 2, 0), (0, height - 2), (width - 2, height - 2)], lineDepth)
         mask.set_alpha(transparency)
 
         mask = pg.transform.rotate(mask, -rotation)
@@ -448,7 +458,7 @@ class Surface:
             texture.apply(self.surf, mask, topleft, transparency)
             texture.reset()
         else:
-            self.surf.blit(mask, topleft.get())
+            self.surf.blit(mask, topleft._get())
 
     def drawText(self, pos: vec2, width: int, height: int, text: str, color: Union[rgb, rgba] = rgba(0, 0, 0, 255), fontStyle: Union[None, str] = None, *, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_texts
@@ -462,9 +472,9 @@ class Surface:
             text_instance = filtered[-1]
         text_instance.set_alpha(transparency)
         text_instance.rotate(rotation)
-        self.surf.blit(text_instance.get(width - ((width // 2) // 4), height - ((height // 2) // 4)), vec2(topleft.x + ((width // 2) // 4) // 2, topleft.y + ((height // 2) // 4) // 2).get())
+        self.surf.blit(text_instance._get(width - ((width // 2) // 4), height - ((height // 2) // 4)), vec2(topleft.x + ((width // 2) // 4) // 2, topleft.y + ((height // 2) // 4) // 2)._get())
         
-    def get(self) -> pg.Surface:
+    def _get(self) -> pg.Surface:
         return self.surf
 
 class InputListener:
@@ -544,7 +554,7 @@ class InputListener:
         self.just_released_buttons.clear()
 
     def isKeyPressed(self, key: str) -> bool:
-        return self.keys_down.get(key, False)
+        return self.keys_down._get(key, False)
 
     def wasKeyPressed(self, key: str) -> bool:
         if key in self.just_pressed_keys:
@@ -557,7 +567,7 @@ class InputListener:
         return False
 
     def isButtonPressed(self, button: str) -> bool:
-        return self.buttons_down.get(button, False)
+        return self.buttons_down._get(button, False)
 
     def wasButtonPressed(self, button: str) -> bool:
         if button in self.just_pressed_buttons:
@@ -570,7 +580,7 @@ class InputListener:
         return False
 
     def isScrollDir(self, dir: str) -> bool:
-        return self.ScrollDIR.get(dir, False)
+        return self.ScrollDIR._get(dir, False)
 
     def getScrollSpeed(self) -> int:
         return self.ScrollSpeed
@@ -579,13 +589,15 @@ class InputListener:
         return self.Mouse_Moved
 
 class Window:
-    def __init__(self, width: int, height: int, caption: str, caption_icon: str = "none", window_flags: int = 0, double_buffering: bool = False) -> None:
-        self.screen: pg.Surface = pg.display.set_mode((width, height), window_flags)
+    def __init__(self, width: int, height: int, caption: str, caption_icon: str = "none", window_flags: List[int] = []) -> None:
+        flags = reduce(lambda x, y: x | y, window_flags)
+        self.screen: pg.Surface = pg.display.set_mode((width, height), flags)
         pg.display.set_caption(caption)
         if caption_icon != "none":
             pg.display.set_icon(pg.image.load(caption_icon))
-        self.db = double_buffering
-        
+        self.db = False
+        if pg.DOUBLEBUF in window_flags:
+            self.db = True
 
         self.clock = pg.time.Clock()
         self.running: bool = False
@@ -621,13 +633,13 @@ class Window:
         self.framerate = rate
 
     def drawLine(self, pos1: vec2, pos2: vec2, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), depth: int = 1) -> None:
-        pg.draw.line(self.screen, color.get(), pos1.get(), pos2.get(), depth)
+        pg.draw.line(self.screen, color._get(), pos1._get(), pos2._get(), depth)
 
     def drawRect(self, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: int = 255, border_radius: int = 0) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(width, height, "tl")
         mask: pg.Surface = pg.Surface((width, height), pg.SRCALPHA)
-        pg.draw.rect(mask, color.get(), (0, 0, width, height), lineDepth, border_radius)
+        pg.draw.rect(mask, color._get(), (0, 0, width, height), lineDepth, border_radius)
         mask.set_alpha(transparency)
 
         mask = pg.transform.rotate(mask, -rotation)
@@ -645,13 +657,13 @@ class Window:
             texture.apply(self.screen, mask, topleft, transparency)
             texture.reset()
         else:
-            self.screen.blit(mask, topleft.get())
+            self.screen.blit(mask, topleft._get())
 
     def drawCircle(self, pos: vec2, radius: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(radius * 2, radius * 2, "tl")
         mask: pg.Surface = pg.Surface((radius * 2, radius * 2), pg.SRCALPHA)
-        pg.draw.circle(mask, color.get(), (radius, radius), radius, lineDepth)
+        pg.draw.circle(mask, color._get(), (radius, radius), radius, lineDepth)
         mask.set_alpha(transparency)
 
         mask = pg.transform.rotate(mask, -rotation)
@@ -669,13 +681,13 @@ class Window:
             texture.apply(self.screen, mask, topleft, transparency)
             texture.reset()
         else:
-            self.screen.blit(mask, topleft.get())
+            self.screen.blit(mask, topleft._get())
 
     def drawTriangle(self, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(width, height, "tl")
         mask: pg.Surface = pg.Surface((width, height), pg.SRCALPHA)
-        pg.draw.polygon(mask, color.get(), [((width//2) - 2, 0), (0, height - 2), (width - 2, height - 2)], lineDepth)
+        pg.draw.polygon(mask, color._get(), [((width//2) - 2, 0), (0, height - 2), (width - 2, height - 2)], lineDepth)
         mask.set_alpha(transparency)
 
         mask = pg.transform.rotate(mask, -rotation)
@@ -693,7 +705,7 @@ class Window:
             texture.apply(self.screen, mask, topleft, transparency)
             texture.reset()
         else:
-            self.screen.blit(mask, topleft.get())
+            self.screen.blit(mask, topleft._get())
 
     def drawText(self, pos: vec2, width: int, height: int, text: str, color: Union[rgb, rgba] = rgba(0, 0, 0, 255), fontStyle: Union[None, str] = None, *, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_texts
@@ -707,10 +719,10 @@ class Window:
             text_instance = filtered[-1]
         text_instance.set_alpha(transparency)
         text_instance.rotate(rotation)
-        self.screen.blit(text_instance.get(width - ((width // 2) // 4), height - ((height // 2) // 4)), vec2(topleft.x + ((width // 2) // 4) // 2, topleft.y + ((height // 2) // 4) // 2).get())
+        self.screen.blit(text_instance._get(width - ((width // 2) // 4), height - ((height // 2) // 4)), vec2(topleft.x + ((width // 2) // 4) // 2, topleft.y + ((height // 2) // 4) // 2)._get())
 
     def drawSurface(self, topleft: vec2, surface: Surface) -> None:
-        self.screen.blit(surface.get(), topleft.get())
+        self.screen.blit(surface._get(), topleft._get())
 
     def getMousePos(self) -> vec2:
         return vec2(pg.mouse.get_pos()[0], pg.mouse.get_pos()[1])
@@ -731,7 +743,7 @@ class Window:
         return self.screen.get_width(), self.screen.get_height()
 
     def clear(self) -> None:
-        self.screen.fill(self.ClearColor.get())
+        self.screen.fill(self.ClearColor._get())
 
     def startGameLoop(self, gameLoop: Callable, escape_sequence: Union[Tuple[str, ...], str], framerate: int, input: Union[None, InputListener] = None) -> None:
         self.escape_sequence = escape_sequence
@@ -747,7 +759,7 @@ class Window:
             if input:
                 input._clear()
 
-            for event in pg.event.get():
+            for event in pg.event._get():
                 if event.type == pg.QUIT:
                     self.running = False
                 if input:
