@@ -185,7 +185,7 @@ window.addButton(button)
 button.draw(window, 0, "Arial", rgb(0, 0, 0), True, 30, rgb(150, 150, 0), rgb(100, 100, 0)) ## draws the button with a background color of rgb(150, 150, 0) and a 30 pixel thick outline with the color rgb(100, 100, 0) and the label in the color black
 ```
 
-##### d`
+##### designs
 ```
 0 -> Normal rect
 1 -> rect with rounded edges
