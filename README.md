@@ -27,7 +27,16 @@ window.starGameLoop(gameLoop, escape_sequence: Union[Tuple[str, ...], str], fram
 
 ## Classes
 
-### vec2
+1. [vec2](#vec2)
+2. [rgb](#rgb)
+3. [rgba](#rgba)
+4. [Timer](#Timer)
+5. [Button](#Button)
+6. [InputListener](#InputListener)
+7. [Suface](#Surface)
+8. [Window](#Window)
+
+### vec2<a name="vec2"></a>
 Creates a 2-Dimensional vector
 ``` python
 vec2(x: int, y: int) -> vec2
@@ -111,7 +120,7 @@ vec = vec2(5, 9)
 normalized = vec.normalize() ## returns: (~0,486, ~0,874)
 ```
 
-### rgb
+### rgb<a name="rgb"></a>
 Creates a rgb value
 !! All values need to be between 0 and 255 !!
 ```python
@@ -127,14 +136,14 @@ color = rgb(150, 50, 254)
 color.getRGBA(150) ## returns: rgba(150, 50, 254, 150)
 ```
 
-### rgba
+### rgba<a name="rgba"></a>
 Creates a rba color
 !! All values need to be between 0 and 255 !!
 ```python
 rgba(red: int, green: int, blue: int, alpha: int) -> rgba
 ```
 
-### Timer
+### Timer<a name="Timer"></a>
 Creates a timer that can be used to update game variables
 ```python
 Timer(delay: int, task: Callable) -> Timer
@@ -165,7 +174,7 @@ timer.unpause() ## lets the timer continue
 timer.stop() ## finally we stop the timer
 ```
 
-### Button
+### Button<a name="Button"></a>
 Creates a visual button on for user input
 ```python
 Button(width: int, height: int, label: str, pos: vec2, onClick: Callable) -> Button
@@ -191,7 +200,7 @@ button.draw(window, 0, "Arial", rgb(0, 0, 0), True, 30, rgb(150, 150, 0), rgb(10
 1 -> rect with rounded edges
 ```
 
-### InputListener
+### InputListener<a name="InputListener"></a>
 ```python
 InputListener() -> InputListener
 InputListener.set_wasPressed(function: Callable[[str], None]) -> None
@@ -254,7 +263,7 @@ Returns with what speed the user scrolls the mouse wheel default 0
 Returns True in the moment the mouse has moved
 
 
-### Surface
+### Surface<a name="Surface"></a>
 Creates a Surface to draw on beside the main screen
 ```python
 Surface(width: int, height: int) -> Surface
@@ -286,7 +295,7 @@ surface.selt_alpha(alpha) ## set the transparency/alpha value of the Surface
 ### The draw functions will be explained in the Window class
 ```
 
-### Window
+### Window<a name="Window"></a>
 Creates a window where pygame will render
 ```python
 Window(width: int, height: int, caption: str, window_flags: List[str]) -> Window
