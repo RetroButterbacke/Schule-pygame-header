@@ -339,7 +339,7 @@ Returns the fps of the window in integer format
 Returns the Literal fps in float's
 
 ##### setFrameRate
-Sets the framrate cap at what value it gets
+Sets the framrate cap at what value it gets\n
 !! warning: this value will be, as soon as the gameloop gets started, ovewritten with the framerate the gameLoop is given this function is for the later on change !!
 
 #### drawLine
