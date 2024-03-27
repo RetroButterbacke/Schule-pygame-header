@@ -261,7 +261,7 @@ Surface(width: int, height: int) -> Surface
 Surface.setClearColor(color: rgb) -> None
 Surface.clear() -> None
 Surface.set_colorkey(color: rgb) -> None
-surface.set_alpha(alpha: int = 255) -> None
+Surface.set_alpha(alpha: int = 255) -> None
 Surface.drawLine(pos1: vec2, pos2: vec2, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), depth: int = 1) -> None
 Surface.drawRect(pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, colorkey: Union[rgb, None] = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255, border_radius: int = 0) -> None
 Surface.drawCircle(pos: vec2, radius: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, colorkey: Union[rgb, None] = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None
