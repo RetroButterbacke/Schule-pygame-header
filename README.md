@@ -297,8 +297,9 @@ surface.selt_alpha(alpha) ## set the transparency/alpha value of the Surface
 
 ### Window<a name="Window"></a>
 Creates a window where pygame will render
+!! Multiple Windows are not possible, 'cause of the way pygame works. !!
 ```python
-Window(width: int, height: int, caption: str, window_flags: List[str]) -> Window
+Window(width: int, height: int, caption: str, caption_icon: str = "None", window_flags: List[str]) -> Window ## caption_icon as file path
 Window.getDeltaTime() -> float
 Window.getTimeDiff() -> float
 Window.getFPS() -> int
