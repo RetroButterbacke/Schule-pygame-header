@@ -176,6 +176,7 @@ window.addButton(tunnelingButton)
 def wasKeyPressed(key: str):
     global startGame
     global isGameOver
+    global HighScore
     global drawGrid
 
     if key == "Z":
