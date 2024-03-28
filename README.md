@@ -7,7 +7,7 @@
     numpy
 ```
 
-## Insallation
+## Installation
 ### Manual 
 Download the header and put it into the same folder as your script.
 
