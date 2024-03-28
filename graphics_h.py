@@ -132,6 +132,7 @@ class vec2:
             return vec2(self.x - width//2, self.y + height//2)
         elif modifier == "br":
             return vec2(self.x + width//2, self.y + height//2)
+        return vec2(0, 0)
 
     def _get(self) -> Tuple[int, int]:
         return (self.x, self.y)
@@ -233,7 +234,7 @@ class Timer:
             self.paused = False
 
     def stop(self) -> None:
-        if self.running:
+        if self.running and self.thread:
             self.stop_flag.set()
             self.thread.join()
             self.running = False
@@ -659,7 +660,7 @@ class Window:
         self.framerate = rate
 
     def drawLine(self, pos1: vec2, pos2: vec2, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), depth: int = 1) -> None:
-        pg.draw.line(self.surf, color._get(), pos1._get(), pos2._get(), depth)
+        pg.draw.line(self.screen, color._get(), pos1._get(), pos2._get(), depth)
 
     def drawRect(self, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, colorkey: Union[rgb, None] = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255, border_radius: int = 0) -> None:
         global initialized_textures
@@ -753,7 +754,7 @@ class Window:
         texture.rotate(rotation)
         if colorkey:
             texture.set_colorkey(colorkey)
-        texture.apply(self.screen, self.surf, topleft, transparency)
+        texture.apply(self.screen, self.screen, topleft, transparency)
         texture.reset()
 
     def drawText(self, pos: vec2, width: int, height: int, text: str, color: Union[rgb, rgba] = rgba(0, 0, 0, 255), fontStyle: Union[None, str] = None, *, rotation: int = 0, transparency: int = 255) -> None:
