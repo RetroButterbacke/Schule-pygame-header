@@ -7,6 +7,47 @@
     numpy
 ```
 
+## Insallation
+### Manual 
+Download the header and put it into the same folder as your script.
+
+### For Thonny
+Under Tools you should find something called "Open system shell"
+
+![system-shell image](images/how_to_find_shell.png)
+
+Now after you click on that, a new window will open.
+
+![System shell image](images/system_shell.png)
+
+Now you want to type in this command to install the header
+```shell
+$ pip install git+https://github.com/RetroButterbacke/Schule-pygame-header.git@pip
+```
+
+![Command image](images/install_command.png)
+
+Now after the command has installed the header it should look something like this
+
+![Result image](images/result.png)
+
+At last you want to type "exit" and than continue onwards with the scripting.
+
+### Localy on Laptop/PC
+Open via the menu your terminal for windows it's on default cmd.
+Now you want to type in the following command:
+```shell
+$ pip install git+https://github.com/RetroButterbacke/Schule-pygame-header.git@pip
+```
+
+![Command image](images/install_command.png)
+
+Now after the command has installed the header it should look something like this
+
+![Result image](images/result.png)
+
+At last you want to type "exit" and than continue onwards with the scripting.
+
 ## Usage
 ```python
 from graphics_h import *
