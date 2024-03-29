@@ -7,7 +7,7 @@ pygame
 numpy
 
 #modules
-graphics.py
+graphics_pg_old(.py)
 
 ## Setup
 
