@@ -1,11 +1,9 @@
-import graphics_h as gh
+import graphics_pg as gh
 
 gh.init()
 
 window = gh.Window(500, 250, "Test")
 window.setClearColor(gh.rgb(43, 172, 250))
-
-input = InputListener()
 
 window.clear()
 window.drawText(gh.vec2(250, 125), 50, 25, "Test", gh.rgb(150, 0, 0))
@@ -20,6 +18,6 @@ def gameLoop():
     window.drawCircle(gh.vec2(250, 200), 30, gh.rgb(0, 10, 0), "./test.jpg")
     return
 
-window.startGameLoop(gameLoop, "ESCAPE", 60, input)
+window.startGameLoop(gameLoop, "ESCAPE", 60)
 
 gh.quit()

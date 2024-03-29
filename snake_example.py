@@ -1,6 +1,7 @@
-from graphics_h import *
+from graphics_pg import *
 from typing import List
 import random
+import pygame as pg
 
 init()
 
@@ -49,7 +50,6 @@ def applePos() -> vec2:
             pos += vec2(tileSize, 0)
             if (pos.x > (width - 1) // tileSize):
                 pos += vec2(tileSize, tileSize)
-    return vec2(0, 0)
 
 def calculateNext():
     global Apple
@@ -87,18 +87,6 @@ def calculateNext():
         valocity_x = 0
         valocity_y = 1
     elif lastKey == "D" and valocity_x != -1:
-        valocity_x = 1
-        valocity_y = 0
-    if lastKey == "UP" and valocity_y != 1:
-        valocity_x = 0
-        valocity_y = -1
-    elif lastKey == "LEFT" and valocity_x != 1:
-        valocity_x = -1
-        valocity_y = 0
-    elif lastKey == "DOWN" and valocity_y != -1:
-        valocity_x = 0
-        valocity_y = 1
-    elif lastKey == "RIGHT" and valocity_x != -1:
         valocity_x = 1
         valocity_y = 0
 
@@ -188,7 +176,6 @@ window.addButton(tunnelingButton)
 def wasKeyPressed(key: str):
     global startGame
     global isGameOver
-    global HighScore
     global drawGrid
 
     if key == "Z":
@@ -209,14 +196,6 @@ def wasKeyPressed(key: str):
         lastKeys.append("S")
     if key == "D" and lastKeys[-1] != "A" and valocity_x != 1:
         lastKeys.append("D")
-    if key == "UP" and lastKeys[-1] != "DOWN" and valocity_y != 1:
-        lastKeys.append("UP")
-    if key == "LEFT" and lastKeys[-1] != "RIGHT" and valocity_x != -1:
-        lastKeys.append("LEFT")
-    if key == "DOWN" and lastKeys[-1] != "UP" and valocity_y != -1:
-        lastKeys.append("DOWN")
-    if key == "RIGHT" and lastKeys[-1] != "LEFT" and valocity_x != 1:
-        lastKeys.append("RIGHT")
 
     if key == "R":
         if startGame:

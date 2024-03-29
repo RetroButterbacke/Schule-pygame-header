@@ -1,7 +1,6 @@
-import graphics_old as g
+import graphics_pg_old as g
 from typing import List
 import random
-import pygame as pg
 
 g.init()
 window = g.createWindow(1000, 500, "Snake")
