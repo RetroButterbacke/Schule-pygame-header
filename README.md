@@ -11,7 +11,6 @@
 ### Manual 
 Download the header and put it into the same directory as your script.
 
-
 ### For the following
 Download and install git
 Link: https://git-scm.com/downloads
@@ -52,6 +51,9 @@ Now after the command has installed the header it should look something like thi
 ![Result image](images/result.png)
 
 At last you want to type "exit" and than continue onwards with the scripting.
+
+## Modules
+[Here](https://github.com/RetroButterbacke/Schule-pygame-header/tree/pip) you find the state of the modules that are done and for what use they are.
 
 ## Usage
 ```python
