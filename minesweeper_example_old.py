@@ -1,4 +1,4 @@
-import graphics_old as g
+import graphics_pg_old as g
 from typing import Dict, List
 import random
 import pygame

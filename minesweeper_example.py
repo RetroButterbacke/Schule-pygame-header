@@ -1,4 +1,4 @@
-from graphics_h import * 
+from graphics_pg import * 
 from typing import Dict, List
 import random
 
@@ -6,8 +6,6 @@ init()
 
 window = Window(1000, 500, "Minesweeper")
 window.setClearColor(rgb(210, 210, 210))
-
-input = InputListener()
 
 tileSize: int = 20
 
@@ -19,7 +17,7 @@ x_end: int = (window.get_width() - (grid_start_x + move_x * 2)) // tileSize
 y_end: int = (window.get_height() - (grid_start_y + move_y)) // tileSize
 redraw: bool = True
 
-grid: Surface = Surface(*window.get_size())
+grid: Surface = Surface(*window.getSize())
 
 for x in range(grid_start_x, x_end):
     for y in range(grid_start_y, y_end):
@@ -64,7 +62,7 @@ for tile, value in tiles.items():
 
 def open(tile: vec2) -> None:
     
-    return    
+    return
 
 def gameLoop():
     global redraw
@@ -78,10 +76,10 @@ def gameLoop():
         window.quit()
         return 
 
-    if input.wasKeyPressed("K"):
+    if window.wasKeyPressed("K"):
         print(tiles)
 
-    if input.wasButtonPressed("LEFT"):
+    if window.wasButtonPressed("LEFT"):
         mousePos = window.getMousePos()
         if move_x <= mousePos.x < (x_end * tileSize) + move_x and move_y <= mousePos.y < (y_end * tileSize) + move_y:
             pos = vec2(((mousePos.x - move_x) // tileSize), ((mousePos.y - move_y) // tileSize))
@@ -110,6 +108,6 @@ def gameLoop():
 
     return
 
-window.startGameLoop(gameLoop, "ESCAPE", 60, input)
+window.startGameLoop(gameLoop, "ESCAPE", 60)
 
 quit()

@@ -55,7 +55,7 @@ At last you want to type "exit" and than continue onwards with the scripting.
 
 ## Usage
 ```python
-from graphics_h import *
+from graphics_pg import *
 
 init()
 
