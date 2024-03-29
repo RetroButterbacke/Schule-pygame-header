@@ -16,7 +16,7 @@ Under Tools you should find something called "Open system shell"
 
 ![system-shell image](images/how_to_find_shell.png)
 
-Now after you click on that, a new window will open.
+Now after you clicked on that, a new window will open.
 
 ![System shell image](images/system_shell.png)
 
