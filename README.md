@@ -9,7 +9,7 @@
 
 ## Installation
 ### Manual 
-Download the header and put it into the same folder as your script.
+Download the header and put it into the same directory as your script.
 
 ### For Thonny
 Under Tools you should find something called "Open system shell"
