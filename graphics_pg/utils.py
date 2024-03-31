@@ -1,6 +1,6 @@
 import pygame as pg
 from dataclasses import dataclass
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple
 from math import sqrt
 from collections.abc import Callable
 import threading
