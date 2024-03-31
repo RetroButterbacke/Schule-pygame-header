@@ -240,7 +240,7 @@ class Texture:
         self.texture: pg.Surface = self.getScaled(width, height) if scaled else self.get()
 
     # the higher the transparency, the more you can see it max 3.9.....(< 4) for 8-bit because 32 bits are to high for this?! for 16 bit its 14  wich would be polygons
-    def apply_alpha(self, mask: pg.Surface, transparency: Union[float, int] = 3.9999999) -> pg.Surface:
+    def apply_alpha(self, mask: pg.Surface, transparency: float | int = 3.9999999) -> pg.Surface:
         texture = self.texture.convert_alpha()
         target = pg.surfarray.pixels_alpha(texture)
         target_array = pg.surfarray.array2d(mask) * transparency
@@ -276,7 +276,7 @@ class Range:
         else:
             return False
 
-def getFontDimensions(text: str, font_style: Union[None, str], width: int, height: int) -> Tuple[int, int, int]:
+def getFontDimensions(text: str, font_style: None | str, width: int, height: int) -> Tuple[int, int, int]:
     font_size = 1
     font = pg.font.Font(pg.font.match_font(font_style), font_size) if font_style else pg.font.Font(None, font_size)
     text_surface = font.render(text, True, (0, 0, 0, 0))
@@ -344,10 +344,10 @@ def getScrollSpeed() -> int:
 def hasMouseMoved() -> bool:
     return Mouse_Moved
 
-hitboxColor: Union[rgb, rgba] = rgb(0,0,0)
+hitboxColor: rgb | rgba = rgb(0,0,0)
 drawHitboxes: bool = False
 
-def setHitboxColor(color: Union[rgb, rgba]) -> None:
+def setHitboxColor(color: rgb | rgba) -> None:
     global hitboxColor
     hitboxColor = color
 
@@ -355,10 +355,10 @@ def showHitboxes(draw: bool) -> None:
     global drawHitboxes
     drawHitboxes = draw
 
-def drawLine(window: pg.Surface, pos1: vec2, pos2: vec2, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), depth: int = 1) -> None:
+def drawLine(window: pg.Surface, pos1: vec2, pos2: vec2, color: rgb | rgba = rgba(255, 255, 255, 255), depth: int = 1) -> None:
     pg.draw.line(window, color.get(), pos1.get(), pos2.get(), depth)
 
-def drawRect(window: pg.Surface, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texture: Union[None, Texture] = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: int = 255, border_radius: int = 0) -> None:
+def drawRect(window: pg.Surface, pos: vec2, width: int, height: int, color: rgb | rgba = rgba(255, 255, 255, 255), texture: None | Texture = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: int = 255, border_radius: int = 0) -> None:
     topleft: vec2 = pos.convert(width, height, "tl")
     mask: pg.Surface = pg.Surface((width, height), pg.SRCALPHA)
     pg.draw.rect(mask, color.get(), (0, 0, width, height), lineDepth, border_radius)
@@ -374,7 +374,7 @@ def drawRect(window: pg.Surface, pos: vec2, width: int, height: int, color: Unio
         window.blit(mask, topleft.get())
             
 
-def drawCircle(window: pg.Surface, pos: vec2, radius: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texture: Union[None, Texture] = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
+def drawCircle(window: pg.Surface, pos: vec2, radius: int, color: rgb | rgba = rgba(255, 255, 255, 255), texture: None | Texture = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
     topleft: vec2 = pos.convert(radius * 2, radius * 2, "tl")
     mask: pg.Surface = pg.Surface((radius * 2, radius * 2), pg.SRCALPHA)
     pg.draw.circle(mask, color.get(), (radius, radius), radius, lineDepth)
@@ -389,7 +389,7 @@ def drawCircle(window: pg.Surface, pos: vec2, radius: int, color: Union[rgb, rgb
     else:
         window.blit(mask, topleft.get())
 
-def drawTriangle(window: pg.Surface, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texture: Union[None, Texture] = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
+def drawTriangle(window: pg.Surface, pos: vec2, width: int, height: int, color: rgb | rgba = rgba(255, 255, 255, 255), texture: None | Texture = None, *, scaled: bool = True, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
     topleft: vec2 = pos.convert(width, height, "tl")
     mask: pg.Surface = pg.Surface((width, height), pg.SRCALPHA)
     pg.draw.polygon(mask, color.get(), [((width//2) - 2, 0), (0, height - 2), (width - 2, height - 2)], lineDepth)
@@ -410,7 +410,7 @@ def drawTexture(window: pg.Surface, pos: vec2, width: int, height: int, texture:
     texture.set_alpha(transparency)
     window.blit(texture.getScaled(width, height), topleft.get())
 
-def drawText(window: pg.Surface, pos: vec2, width: int, height: int, text: str, color: Union[rgb, rgba] = rgba(0, 0, 0, 255), fontStyle: Union[None, str] = None, *, rotation: int = 0, transparency: int = 255) -> None:
+def drawText(window: pg.Surface, pos: vec2, width: int, height: int, text: str, color: rgb | rgba = rgba(0, 0, 0, 255), fontStyle: None | str = None, *, rotation: int = 0, transparency: int = 255) -> None:
     topleft: vec2 = pos.convert(width, height, "tl")
     font_size, text_width, text_height = getFontDimensions(text, fontStyle, width, height)
     font = pg.font.Font(pg.font.match_font(fontStyle), font_size) if fontStyle else pg.font.Font(None, font_size)
@@ -425,7 +425,7 @@ def drawText(window: pg.Surface, pos: vec2, width: int, height: int, text: str, 
     del font
 
 class Button:
-    def __init__(self, width: int, height: int, pos: vec2, label: Union[None, str], runOnClick: Callable):
+    def __init__(self, width: int, height: int, pos: vec2, label: None | str, runOnClick: Callable):
         topleft = pos.convert(width, height, "tl")
         bottomright = pos.convert(width, height, "br")
         self.range = Range(topleft.x, topleft.y, bottomright.x, bottomright.y)
@@ -441,7 +441,7 @@ class Button:
         if self.range.inRange(pos):
             self.runOnClick()
 
-    def draw(self, window: pg.Surface, design: int = 0, fontStyle: Union[str, None] = None, fontColor: rgb = rgb(0, 0, 0), outlined: bool = False, outline_depth: int = 0, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), outlineColor: Union[rgb, rgba] = rgba(255, 255, 255, 255), border_radius: int = 20, texture: Union[None, Texture] = None, outlineTexture: Union[None, Texture] = None, scaled: bool = True, scaledOutline: bool = True, transparency: int = 255, transparencyOutline: int = 255, rotation: int = 0) -> None:
+    def draw(self, window: pg.Surface, design: int = 0, fontStyle: str | None = None, fontColor: rgb = rgb(0, 0, 0), outlined: bool = False, outline_depth: int = 0, color: rgb | rgba = rgba(255, 255, 255, 255), outlineColor: rgb | rgba = rgba(255, 255, 255, 255), border_radius: int = 20, texture: None | Texture = None, outlineTexture: None | Texture = None, scaled: bool = True, scaledOutline: bool = True, transparency: int = 255, transparencyOutline: int = 255, rotation: int = 0) -> None:
         self.isDrawn = True
         if design == 0:
             drawRect(window, vec2(self.x, self.y).convert(self.width, self.height, "ctl"), self.width, self.height, color, texture, scaled=scaled, transparency=transparency, rotation=rotation)
@@ -454,7 +454,7 @@ class Button:
         if self.label != None:
             drawText(window, vec2(self.x, self.y).convert(self.width, self.height, "ctl"), self.width, self.height, self.label, fontColor, fontStyle, rotation=rotation, transparency=transparency)
 
-    def drawHitbox(self, window: pg.Surface, color: Union[rgb, rgba] = rgba(150, 0 ,0, 255)) -> None:
+    def drawHitbox(self, window: pg.Surface, color: rgb | rgba = rgba(150, 0 ,0, 255)) -> None:
         pg.draw.rect(window, color.get(), (self.x, self.y, self.width, self.height), 1)
 
 
@@ -475,7 +475,7 @@ def setClearColor(color: rgb) -> None:
     global ClearColor
     ClearColor = color
 
-def startGameLoop(gameLoop: Callable, window: pg.Surface, escape_sequence: Union[Tuple[str, ...], str], framerate: int)-> None:
+def startGameLoop(gameLoop: Callable, window: pg.Surface, escape_sequence: Tuple[str, ...] | str, framerate: int)-> None:
     global ScrollSpeed
     global Mouse_Moved
     global just_pressed_keys

@@ -128,6 +128,7 @@ class vec2:
             return vec2(self.x - width//2, self.y + height//2)
         elif modifier == "br":
             return vec2(self.x + width//2, self.y + height//2)
+        return vec2(0, 0)
 
     def _get(self) -> Tuple[int, int]:
         return (self.x, self.y)
@@ -229,7 +230,7 @@ class Timer:
             self.paused = False
 
     def stop(self) -> None:
-        if self.running:
+        if self.running and self.thread:
             self.stop_flag.set()
             self.thread.join()
             self.running = False
@@ -248,9 +249,9 @@ class InputListener:
         self.just_pressed_buttons: List[str] = []
         self.just_released_buttons: List[str] = []
 
-        self.isPressed: Union[None, Callable[[str], None]] = None
-        self.wasPressed: Union[None, Callable[[str], None]] = None
-        self.wasReleased: Union[None, Callable[[str], None]] = None
+        self.isPressed: None | Callable[[str], None] = None
+        self.wasPressed: None | Callable[[str], None] = None
+        self.wasReleased: None | Callable[[str], None] = None
 
 
     def set_wasPressed(self, function: Callable[[str], None]) -> None:

@@ -1,9 +1,12 @@
-from .utils import *
 from collections.abc import Callable
-from typing import List, Tuple, Union, Dict
+from .utils import *
+from typing import List, Tuple, Dict
 from functools import reduce
 from dataclasses import dataclass, field
 import pygame as pg
+import time
+import threading
+from math import sqrt
 import sys
 
 __all__ = ["Button", "Surface", "Window", "init", "quit"]
@@ -28,7 +31,7 @@ class Texture:
     def convert(self, width: int, height: int) -> None:
         object.__setattr__(self, 'texture', self.getScaled(width, height))
 
-    def apply_alpha(self, mask: pg.Surface, transparency: Union[float, int] = 255) -> pg.Surface:
+    def apply_alpha(self, mask: pg.Surface, transparency: float | int = 255) -> pg.Surface:
         texture = self.texture.convert_alpha()
         target = pg.surfarray.pixels_alpha(texture)
         mask.set_alpha(0)
@@ -53,7 +56,7 @@ class Texture:
     def get(self) -> pg.Surface:
         return self.texture
     
-def getFontSize(text: str, font_style: Union[None, str], width: int, height: int) -> int:
+def getFontSize(text: str, font_style: None | str, width: int, height: int) -> int:
     font_size = 1
     font = pg.font.Font(pg.font.match_font(font_style), font_size) if font_style else pg.font.Font(None, font_size)
     text_surface = font.render(text, False, (0, 0, 0, 0))
@@ -78,11 +81,11 @@ def getFontSize(text: str, font_style: Union[None, str], width: int, height: int
 @dataclass(frozen=True, eq=True)
 class Text:
     text: str
-    style: Union[None, str] = None
+    style: None | str = None
     text_surface: pg.Surface = field(init=False, compare=False)
     loaded: bool = field(init=False, compare=False, default=False)
 
-    def load(self, width: int, height: int, color: Union[rgb, rgba]) -> None:
+    def load(self, width: int, height: int, color: rgb | rgba) -> None:
         if not self.loaded:
             font_size = getFontSize(self.text, self.style, width, height)
             font = pg.font.Font(pg.font.match_font(self.style), font_size) if self.style else pg.font.Font(None, font_size)
@@ -102,7 +105,7 @@ class Text:
         return pg.transform.scale(self.text_surface, (width, height))
     
 class Button:
-    def __init__(self, width: int, height: int, pos: vec2, label: Union[None, str], runOnClick: Callable) -> None:
+    def __init__(self, width: int, height: int, pos: vec2, label: None | str, runOnClick: Callable) -> None:
         topleft = pos.convert(width, height, "tl")
         bottomright = pos.convert(width, height, "br")
         self.range = pg.Rect(topleft.x, topleft.y, bottomright.x - topleft.x, bottomright.y - topleft.y)
@@ -119,7 +122,7 @@ class Button:
         if self.range.collidepoint(*pos._get()):
             self.runOnClick()
 
-    def draw(self, window: 'Window', design: int = 0, fontStyle: Union[str, None] = None, fontColor: rgb = rgb(0, 0, 0), outlined: bool = False, outline_depth: int = 0, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), outlineColor: Union[rgb, rgba] = rgba(255, 255, 255, 255), border_radius: int = 20, texture: Union[None, str] = None, outlineTexture: Union[None, str] = None, transparency: int = 255, transparencyOutline: int = 255, rotation: int = 0) -> None:
+    def draw(self, window: 'Window', design: int = 0, fontStyle: str | None = None, fontColor: rgb = rgb(0, 0, 0), outlined: bool = False, outline_depth: int = 0, color: rgb | rgba = rgba(255, 255, 255, 255), outlineColor: rgb | rgba = rgba(255, 255, 255, 255), border_radius: int = 20, texture: None | str = None, outlineTexture: None | str = None, transparency: int = 255, transparencyOutline: int = 255, rotation: int = 0) -> None:
         self.isDrawn = True
         if design == 0:
             window.drawRect(self.pos, self.width, self.height, color, texture, transparency=transparency, rotation=rotation)
@@ -132,7 +135,7 @@ class Button:
         if self.label != None:
             window.drawText(self.pos, self.width, self.height - ((self.height // 2) // 4), self.label, fontColor, fontStyle, rotation=rotation, transparency=transparency)
 
-    def _drawHitbox(self, screen: pg.Surface, color: Union[rgb, rgba] = rgba(150, 0 ,0, 255)) -> None:
+    def _drawHitbox(self, screen: pg.Surface, color: rgb | rgba = rgba(150, 0 ,0, 255)) -> None:
         pg.draw.rect(screen, color._get(), (self.topx, self.topy, self.width, self.height), 1)
 
 initialized_texts: List[Text] = []
@@ -141,9 +144,9 @@ initialized_textures: List[Texture] = []
 class Surface:
     def __init__(self, width: int, height: int) -> None:
         self.surf: pg.Surface = pg.Surface((width, height), pg.SRCALPHA)
-        self.ClearColor: Union[rgb, rgba] = rgba(0, 0, 0, 0)
+        self.ClearColor: rgb | rgba = rgba(0, 0, 0, 0)
 
-    def setClearColor(self, color: Union[rgb, rgba]) -> None:
+    def setClearColor(self, color: rgb | rgba) -> None:
         self.ClearColor = color
 
     def clear(self):
@@ -155,10 +158,10 @@ class Surface:
     def set_alpha(self, alpha: int) -> None:
         self.surf.set_alpha(alpha)
 
-    def drawLine(self, pos1: vec2, pos2: vec2, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), depth: int = 1) -> None:
+    def drawLine(self, pos1: vec2, pos2: vec2, color: rgb | rgba = rgba(255, 255, 255, 255), depth: int = 1) -> None:
         pg.draw.line(self.surf, color._get(), pos1._get(), pos2._get(), depth)
 
-    def drawRect(self, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, colorkey: Union[rgb, None] = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255, border_radius: int = 0) -> None:
+    def drawRect(self, pos: vec2, width: int, height: int, color: rgb | rgba = rgba(255, 255, 255, 255), texturePath: None | str = None, *, colorkey: rgb | None = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255, border_radius: int = 0) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(width, height, "tl")
         mask: pg.Surface = pg.Surface((width, height), pg.SRCALPHA)
@@ -184,7 +187,7 @@ class Surface:
         else:
             self.surf.blit(mask, topleft._get())
 
-    def drawCircle(self, pos: vec2, radius: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, colorkey: Union[rgb, None] = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
+    def drawCircle(self, pos: vec2, radius: int, color: rgb | rgba = rgba(255, 255, 255, 255), texturePath: None | str = None, *, colorkey: rgb | None = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(radius * 2, radius * 2, "tl")
         mask: pg.Surface = pg.Surface((radius * 2, radius * 2), pg.SRCALPHA)
@@ -210,7 +213,7 @@ class Surface:
         else:
             self.surf.blit(mask, topleft._get())
 
-    def drawTriangle(self, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, colorkey: Union[rgb, None] = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
+    def drawTriangle(self, pos: vec2, width: int, height: int, color: rgb | rgba = rgba(255, 255, 255, 255), texturePath: None | str = None, *, colorkey: rgb | None = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(width, height, "tl")
         mask: pg.Surface = pg.Surface((width, height), pg.SRCALPHA)
@@ -236,7 +239,7 @@ class Surface:
         else:
             self.surf.blit(mask, topleft._get())
         
-    def drawTexture(self, pos: vec2, width: int, height: int, texturePath: str, *, colorkey: Union[rgb, None] = None, rotation: int = 0, transparency: int = 255) -> None:
+    def drawTexture(self, pos: vec2, width: int, height: int, texturePath: str, *, colorkey: rgb | None = None, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(width, height, "tl")
         texture = Texture(texturePath)
@@ -253,7 +256,7 @@ class Surface:
         texture.apply(self.surf, self.surf, topleft, transparency)
         texture.reset()
 
-    def drawText(self, pos: vec2, width: int, height: int, text: str, color: Union[rgb, rgba] = rgba(0, 0, 0, 255), fontStyle: Union[None, str] = None, *, rotation: int = 0, transparency: int = 255) -> None:
+    def drawText(self, pos: vec2, width: int, height: int, text: str, color: rgb | rgba = rgba(0, 0, 0, 255), fontStyle: None | str = None, *, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_texts
         topleft: vec2 = pos.convert(width, height, "tl")
         text_instance: Text = Text(text, fontStyle)
@@ -289,12 +292,12 @@ class Window:
 
         self.ClearColor: rgb = rgb(0, 0, 0)
         
-        self.hitboxColor: Union[rgb, rgba] = rgb(0,0,0)
+        self.hitboxColor: rgb | rgba = rgb(0,0,0)
         self.drawHitboxes: bool = False
 
         self.visual_buttons: List[Button] = []
 
-        self.escape_sequence: Union[Tuple[str, ...], str] = "ESCAPE"
+        self.escape_sequence: Tuple[str, ...] | str = "ESCAPE"
         self.framerate: int = 60
 
         self.current: int = 0
@@ -317,10 +320,10 @@ class Window:
     def setFrameRate(self, rate: int) -> None:
         self.framerate = rate
 
-    def drawLine(self, pos1: vec2, pos2: vec2, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), depth: int = 1) -> None:
-        pg.draw.line(self.surf, color._get(), pos1._get(), pos2._get(), depth)
+    def drawLine(self, pos1: vec2, pos2: vec2, color: rgb | rgba = rgba(255, 255, 255, 255), depth: int = 1) -> None:
+        pg.draw.line(self.screen, color._get(), pos1._get(), pos2._get(), depth)
 
-    def drawRect(self, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, colorkey: Union[rgb, None] = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255, border_radius: int = 0) -> None:
+    def drawRect(self, pos: vec2, width: int, height: int, color: rgb | rgba = rgba(255, 255, 255, 255), texturePath: None | str = None, *, colorkey: rgb | None = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255, border_radius: int = 0) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(width, height, "tl")
         mask: pg.Surface = pg.Surface((width, height), pg.SRCALPHA)
@@ -346,7 +349,7 @@ class Window:
         else:
             self.screen.blit(mask, topleft._get())
 
-    def drawCircle(self, pos: vec2, radius: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, colorkey: Union[rgb, None] = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
+    def drawCircle(self, pos: vec2, radius: int, color: rgb | rgba = rgba(255, 255, 255, 255), texturePath: None | str = None, *, colorkey: rgb | None = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(radius * 2, radius * 2, "tl")
         mask: pg.Surface = pg.Surface((radius * 2, radius * 2), pg.SRCALPHA)
@@ -372,7 +375,7 @@ class Window:
         else:
             self.screen.blit(mask, topleft._get())
 
-    def drawTriangle(self, pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, colorkey: Union[rgb, None] = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
+    def drawTriangle(self, pos: vec2, width: int, height: int, color: rgb | rgba = rgba(255, 255, 255, 255), texturePath: None | str = None, *, colorkey: rgb | None = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(width, height, "tl")
         mask: pg.Surface = pg.Surface((width, height), pg.SRCALPHA)
@@ -398,7 +401,7 @@ class Window:
         else:
             self.screen.blit(mask, topleft._get())
         
-    def drawTexture(self, pos: vec2, width: int, height: int, texturePath: str, *, colorkey: Union[rgb, None] = None, rotation: int = 0, transparency: int = 255) -> None:
+    def drawTexture(self, pos: vec2, width: int, height: int, texturePath: str, *, colorkey: rgb | None = None, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(width, height, "tl")
         texture = Texture(texturePath)
@@ -412,10 +415,10 @@ class Window:
         texture.rotate(rotation)
         if colorkey:
             texture.set_colorkey(colorkey)
-        texture.apply(self.screen, self.surf, topleft, transparency)
+        texture.apply(self.screen, self.screen, topleft, transparency)
         texture.reset()
 
-    def drawText(self, pos: vec2, width: int, height: int, text: str, color: Union[rgb, rgba] = rgba(0, 0, 0, 255), fontStyle: Union[None, str] = None, *, rotation: int = 0, transparency: int = 255) -> None:
+    def drawText(self, pos: vec2, width: int, height: int, text: str, color: rgb | rgba = rgba(0, 0, 0, 255), fontStyle: None | str = None, *, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_texts
         topleft: vec2 = pos.convert(width, height, "tl")
         text_instance: Text = Text(text, fontStyle)
@@ -453,7 +456,7 @@ class Window:
     def clear(self) -> None:
         self.screen.fill(self.ClearColor._get())
 
-    def startGameLoop(self, gameLoop: Callable, escape_sequence: Union[Tuple[str, ...], str], framerate: int, input: Union[None, InputListener] = None) -> None:
+    def startGameLoop(self, gameLoop: Callable, escape_sequence: Tuple[str, ...] | str, framerate: int, input: None | InputListener = None) -> None:
         self.escape_sequence = escape_sequence
         self.framerate = framerate
 
