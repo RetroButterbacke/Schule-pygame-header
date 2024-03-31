@@ -70,7 +70,7 @@ def gameLoop():
     ...
     return
 
-window.starGameLoop(gameLoop, escape_sequence: Union[Tuple[str, ...], str], framerate: int, input: InputListener)
+window.starGameLoop(gameLoop, escape_sequence: Tuple[str, ...] | str, framerate: int, input: InputListener)
 ```
 
 ## Classes
@@ -225,8 +225,8 @@ timer.stop() ## finally we stop the timer
 ### Button<a name="Button"></a>
 Creates a visual button on for user input
 ```python
-Button(width: int, height: int, label: str, pos: vec2, onClick: Callable) -> Button
-Button.draw(window: Window, design: int = 0, fontStyle: Union[str, None] = None, fontColor: rgb = rgb(0, 0, 0), outlined: bool = False, outline_depth: int = 0, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), outlineColor: Union[rgb, rgba] = rgba(255, 255, 255, 255), border_radius: int = 20, texture: Union[None, str] = None, outlineTexture: Union[None, str] = None, transparency: int = 255, transparencyOutline: int = 255, rotation: int = 0) -> None
+Button(width: int, height: int, label: str | None, pos: vec2, onClick: Callable) -> Button
+Button.draw(window: Window, design: int = 0, fontStyle: str | None = None, fontColor: rgb = rgb(0, 0, 0), outlined: bool = False, outline_depth: int = 0, color: rgb | rgba = rgba(255, 255, 255, 255), outlineColor: rgb | rgba = rgba(255, 255, 255, 255), border_radius: int = 20, texture: None | str = None, outlineTexture: None | str = None, transparency: int = 255, transparencyOutline: int = 255, rotation: int = 0) -> None
 ```
 
 #### Usage
@@ -319,12 +319,12 @@ Surface.setClearColor(color: rgb) -> None
 Surface.clear() -> None
 Surface.set_colorkey(color: rgb) -> None
 Surface.set_alpha(alpha: int = 255) -> None
-Surface.drawLine(pos1: vec2, pos2: vec2, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), depth: int = 1) -> None
-Surface.drawRect(pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, colorkey: Union[rgb, None] = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255, border_radius: int = 0) -> None
-Surface.drawCircle(pos: vec2, radius: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, colorkey: Union[rgb, None] = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None
-Surface.drawTriangle(pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, colorkey: Union[rgb, None] = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None
-Surface.drawTexture(pos: vec2, width: int, height: int, texturePath: str, *, colorkey: Union[rgb, None] = None, rotation: int = 0, transparency: int = 255) -> None
-Surface.drawText(pos: vec2, width: int, height: int, text: str, color: Union[rgb, rgba] = rgba(0, 0, 0, 255), fontStyle: Union[None, str] = None, *, rotation: int = 0, transparency: int = 255) -> None
+Surface.drawLine(pos1: vec2, pos2: vec2, color: rgb | rgba = rgba(255, 255, 255, 255), depth: int = 1) -> None
+Surface.drawRect(pos: vec2, width: int, height: int, color: rgb | rgba = rgba(255, 255, 255, 255), texturePath: None | str = None, *, colorkey: rgb | None = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255, border_radius: int = 0) -> None
+Surface.drawCircle(pos: vec2, radius: int, color: rgb | rgba = rgba(255, 255, 255, 255), texturePath: None | str = None, *, colorkey: rgb | None = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None
+Surface.drawTriangle(pos: vec2, width: int, height: int, color: rgb | rgba = rgba(255, 255, 255, 255), texturePath: None | str = None, *, colorkey: rgb | None = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None
+Surface.drawTexture(pos: vec2, width: int, height: int, texturePath: str, *, colorkey: rgb | None = None, rotation: int = 0, transparency: int = 255) -> None
+Surface.drawText(pos: vec2, width: int, height: int, text: str, color: rgb | rgba = rgba(0, 0, 0, 255), fontStyle: None | str = None, *, rotation: int = 0, transparency: int = 255) -> None
 Surface.drawSurface(topleft: vec2, surface: 'Surface') -> None
 ```
 
@@ -352,12 +352,12 @@ Window.getTimeDiff() -> float
 Window.getFPS() -> int
 Window.getLiteralFPS() -> float
 Window.setFrameRate(rate: int) -> None
-Window.drawLine(pos1: vec2, pos2: vec2, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), depth: int = 1) -> None
-Window.drawRect(pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, colorkey: Union[rgb, None] = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255, border_radius: int = 0) -> None
-Window.drawCircle(pos: vec2, radius: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, colorkey: Union[rgb, None] = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None
-Window.drawTriangle(pos: vec2, width: int, height: int, color: Union[rgb, rgba] = rgba(255, 255, 255, 255), texturePath: Union[None, str] = None, *, colorkey: Union[rgb, None] = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None
-Window.drawTexture(pos: vec2, width: int, height: int, texturePath: str, *, colorkey: Union[rgb, None] = None, rotation: int = 0, transparency: int = 255) -> None
-Window.drawText(pos: vec2, width: int, height: int, text: str, color: Union[rgb, rgba] = rgba(0, 0, 0, 255), fontStyle: Union[None, str] = None, *, rotation: int = 0, transparency: int = 255) -> None
+Window.drawLine(pos1: vec2, pos2: vec2, color: rgb | rgba = rgba(255, 255, 255, 255), depth: int = 1) -> None
+Window.drawRect(pos: vec2, width: int, height: int, color: rgb | rgba = rgba(255, 255, 255, 255), texturePath: None | str = None, *, colorkey: rgb | None = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255, border_radius: int = 0) -> None
+Window.drawCircle(pos: vec2, radius: int, color: rgb | rgba = rgba(255, 255, 255, 255), texturePath: None | str = None, *, colorkey: rgb | None = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None
+Window.drawTriangle(pos: vec2, width: int, height: int, color: rgb | rgba = rgba(255, 255, 255, 255), texturePath: None | str = None, *, colorkey: rgb | None = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None
+Window.drawTexture(pos: vec2, width: int, height: int, texturePath: str, *, colorkey: rgb | None = None, rotation: int = 0, transparency: int = 255) -> None
+Window.drawText(pos: vec2, width: int, height: int, text: str, color: rgb | rgba = rgba(0, 0, 0, 255), fontStyle: None | str = None, *, rotation: int = 0, transparency: int = 255) -> None
 Window.drawSurface(topleft: vec2, surface: 'Surface') -> None
 Window.getMousePos() -> vec2
 Window.addButton(button: Button) -> None
@@ -366,7 +366,7 @@ Window.get_width() -> int
 Window.get_height() -> int
 Window.get_size() -> Tuple[int, int]
 Window.clear() -> None
-Window.startGameLoop(gameLoop: Callable, escape_sequence: Union[Tuple[str, ...], str], framrate: int, input: InputListener) -> None
+Window.startGameLoop(gameLoop: Callable, escape_sequence: Tuple[str, ...], str], framrate: int, input: InputListener) -> None
 Window.quit() -> None
 ``` 
 
