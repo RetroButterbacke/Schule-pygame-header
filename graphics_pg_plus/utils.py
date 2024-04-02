@@ -1,5 +1,4 @@
 import pygame as pg
-from .graphics_pg import InputField
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
 from math import sqrt
@@ -253,8 +252,6 @@ class InputListener:
         self.isPressed: None | Callable[[str], None] = None
         self.wasPressed: None | Callable[[str], None] = None
         self.wasReleased: None | Callable[[str], None] = None
-        
-        self.input_fields: List[InputField] = []
 
 
     def set_wasPressed(self, function: Callable[[str], None]) -> None:
@@ -265,9 +262,6 @@ class InputListener:
 
     def set_isPressed(self, function: Callable[[str], None]) -> None:
         self.isPressed = function
-        
-    def _set_input_fields(self, input_fields: List[InputField]) -> None:
-        self.input_fields = input_fields
 
     def _set_key(self, key: str, isPressed: bool) -> None:
         self.keys_down[key] = isPressed
@@ -294,11 +288,9 @@ class InputListener:
     def _set_scroll_speed(self, speed: int) -> None:
         self.ScrollSpeed = speed
 
-    def _call(self) -> List[str]:
-        input_keys: List[str] = []
+    def _call(self) -> None:
         for key in self.keys_down:
             if key:
-                input_keys.append(key)
                 if self.isPressed:
                     self.isPressed(key)
 
@@ -306,8 +298,6 @@ class InputListener:
             if button:
                 if self.isPressed:
                     self.isPressed(button)
-            
-        return input_keys
 
     def _call_wasPressed(self, key: str) -> None:
         if self.wasPressed:
