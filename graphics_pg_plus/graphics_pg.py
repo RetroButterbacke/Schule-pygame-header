@@ -4,14 +4,15 @@ from typing import List, Tuple, Dict
 from functools import reduce
 from dataclasses import dataclass, field
 import pygame as pg
+import pyperclip as pc
 import sys
+import os
 
 @dataclass(frozen=True, eq=True)
 class Texture:
     filePath: str
     texture: pg.Surface = field(compare=False, init=False)
     original: pg.Surface = field(compare=False, init=False)
-    
 
     def load(self) -> None:
         try:
@@ -21,11 +22,48 @@ class Texture:
             print(f"Error loading texture: {e}")
             sys.exit()
             
+    def __load_tileTexture__(self, width: int = None, height: int = None) -> None:
+        width = width or self.texture.get_width()
+        height = height or self.texture.get_height()
+        
+        result = pg.Surface((width, height), pg.SRCALPHA)
+        for x in range(0, width, self.texture.get_width()):
+            for y in range(0, height, self.texture.get_height()):
+                result.blit(self.texture, (x, y))
+        object.__setattr__(self, 'texture', result)
+        
+    def __load_texturePart__(self, start: vec2 = vec2(0, 0), width: int = None, height: int = None) -> None:
+        width = width or self.texture.get_width()
+        height = height or self.texture.get_height()
+           
+        if start.x > self.texture.get_width() - 1 or start.x < 0 or start.y > self.texture.get_height() - 1 or start.y < 0:
+            raise IndexError("Start pos is out of range")
+        
+        result = pg.Surface((width, height), pg.SRCALPHA)
+        
+        for x in range(0, width):
+            for y in range(0, height):
+                result.set_at((x, y), self.texture.get_at((start.x + x, start.y + y)))
+                #sys.exit()
+                
+        object.__setattr__(self, 'texture', result)
+            
     def reset(self) -> None:
         object.__setattr__(self, 'texture', self.original)
 
-    def convert(self, width: int, height: int) -> None:
-        object.__setattr__(self, 'texture', self.getScaled(width, height))
+    def convert(self, width: int, height: int, scaled: bool = True, starting_point: vec2 | None = None, part_width: int = None, part_height: int = None) -> None:
+        if scaled:
+            if starting_point and part_width and part_height:
+                self.__load_texturePart__(starting_point, part_width, part_height)
+                object.__setattr__(self, 'texture', pg.transform.scale(self.texture, (width, height)))
+            else:
+                object.__setattr__(self, 'texture', self.getScaled(width, height))
+        else:
+            if not starting_point:
+                self.__load_tileTexture__(width, height)
+            else:
+                self.__load_texturePart__(starting_point, width, height)
+        
 
     def apply_alpha(self, mask: pg.Surface, transparency: float | int = 255) -> pg.Surface:
         texture = self.texture.convert_alpha()
@@ -160,7 +198,7 @@ class InputField:
     def _set_focused(self, pos: vec2) -> None:
         self.in_focus = self.range.collidepoint(*pos._get())
         
-    def _update(self, text: str, input: InputListener) -> None:
+    def _update(self, text: str, input: InputListener, mouse_pos: vec2) -> None:
         if self.in_focus:
             if len(text) == 1:
                 if (input.isKeyPressed("LEFT SHIFT") or input.isKeyPressed("RIGHT SHIFT")) and not (input.isKeyPressed("LEFT CTRL") or input.isKeyPressed("RIGHT CTRL")):
@@ -169,8 +207,18 @@ class InputField:
                     if text == "A":
                         self.mark_begin = 0
                         self.mark_end = len(text) - 1
+                    elif text == "C":
+                        if self.mark_begin > -1 and self.mark_end > -1:
+                            clip = ""
+                            for i in range(self.mark_begin, self.mark_end):
+                                clip += self.text[i]
+                            pc.copy(clip.strip())
+                    elif text == "V":
+                        text = pc.paste()
                 else:
                     self.text += text.lower()
+            if input.isButtonPressed("LEFT"):
+                pass
     
     def draw(self, window: 'Window', fontStyle: str | None = None, fontColor: rgb = rgb(0, 0, 0), cursor_color: rgb | rgba = rgb(0, 0, 0), outlined: bool = False, outline_depth: int = 0, background_color: rgb | rgba = rgba(255, 255, 255, 255), outlineColor: rgb | rgba = rgba(255, 255, 255, 255), border_radius: int = 20, background_texture: None | str = None, outline_texture: None | str = None, background_transparency: int = 255, outline_transparency: int = 255, rotation: int = 0) -> None:
         pass
@@ -195,7 +243,7 @@ class Surface:
     def drawLine(self, pos1: vec2, pos2: vec2, color: rgb | rgba = rgba(255, 255, 255, 255), depth: int = 1) -> None:
         pg.draw.line(self.surf, color._get(), pos1._get(), pos2._get(), depth)
 
-    def drawRect(self, pos: vec2, width: int, height: int, color: rgb | rgba = rgba(255, 255, 255, 255), texturePath: None | str = None, *, colorkey: rgb | None = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255, border_radius: int = 0) -> None:
+    def drawRect(self, pos: vec2, width: int, height: int, color: rgb | rgba = rgba(255, 255, 255, 255), texturePath: None | str = None, *, scaled: bool = True, starting_point: vec2 | None = None, part_width: int = None, part_height: int = None, colorkey: rgb | None = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255, border_radius: int = 0) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(width, height, "tl")
         mask: pg.Surface = pg.Surface((width, height), pg.SRCALPHA)
@@ -212,7 +260,7 @@ class Surface:
             else:
                 filtered = list(filter(lambda x: x == texture, initialized_textures))
                 texture = filtered[-1]
-            texture.convert(width, height)
+            texture.convert(width, height, scaled, starting_point, part_width, part_height)
             texture.rotate(rotation)
             if colorkey:
                 texture.set_colorkey(colorkey)
@@ -221,7 +269,7 @@ class Surface:
         else:
             self.surf.blit(mask, topleft._get())
 
-    def drawCircle(self, pos: vec2, radius: int, color: rgb | rgba = rgba(255, 255, 255, 255), texturePath: None | str = None, *, colorkey: rgb | None = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
+    def drawCircle(self, pos: vec2, radius: int, color: rgb | rgba = rgba(255, 255, 255, 255), texturePath: None | str = None, *, scaled: bool = True, starting_point: vec2 | None = None, part_width: int = None, part_height: int = None, colorkey: rgb | None = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(radius * 2, radius * 2, "tl")
         mask: pg.Surface = pg.Surface((radius * 2, radius * 2), pg.SRCALPHA)
@@ -237,8 +285,8 @@ class Surface:
                 initialized_textures.append(texture)
             else:
                 filtered = list(filter(lambda x: x == texture, initialized_textures))
-                texture = filtered[-1].copy()
-            texture.convert(radius*2, radius*2)
+                texture = filtered[-1]
+            texture.convert(radius*2, radius*2, scaled, starting_point, part_width, part_height)
             texture.rotate(rotation)
             if colorkey:
                 texture.set_colorkey(colorkey)
@@ -247,7 +295,7 @@ class Surface:
         else:
             self.surf.blit(mask, topleft._get())
 
-    def drawTriangle(self, pos: vec2, width: int, height: int, color: rgb | rgba = rgba(255, 255, 255, 255), texturePath: None | str = None, *, colorkey: rgb | None = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
+    def drawTriangle(self, pos: vec2, width: int, height: int, color: rgb | rgba = rgba(255, 255, 255, 255), texturePath: None | str = None, *, scaled: bool = True, starting_point: vec2 | None = None, part_width: int = None, part_height: int = None, colorkey: rgb | None = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(width, height, "tl")
         mask: pg.Surface = pg.Surface((width, height), pg.SRCALPHA)
@@ -264,7 +312,7 @@ class Surface:
             else:
                 filtered = list(filter(lambda x: x == texture, initialized_textures))
                 texture = filtered[-1]
-            texture.convert(width, height)
+            texture.convert(width, height, scaled, starting_point, part_width, part_height)
             texture.rotate(rotation)
             if colorkey:
                 texture.set_colorkey(colorkey)
@@ -273,7 +321,7 @@ class Surface:
         else:
             self.surf.blit(mask, topleft._get())
         
-    def drawTexture(self, pos: vec2, width: int, height: int, texturePath: str, *, colorkey: rgb | None = None, rotation: int = 0, transparency: int = 255) -> None:
+    def drawTexture(self, pos: vec2, width: int, height: int, texturePath: str, *, scaled: bool = True, starting_point: vec2 | None = None, part_width: int = None, part_height: int = None, colorkey: rgb | None = None, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(width, height, "tl")
         texture = Texture(texturePath)
@@ -283,7 +331,7 @@ class Surface:
         else:
             filtered = list(filter(lambda x: x == texture, initialized_textures))
             texture = filtered[-1]
-        texture.convert(width, height)
+        texture.convert(width, height, scaled, starting_point, part_width, part_height)
         texture.rotate(rotation)
         if colorkey:
             texture.set_colorkey(colorkey)
@@ -359,7 +407,7 @@ class Window:
     def drawLine(self, pos1: vec2, pos2: vec2, color: rgb | rgba = rgba(255, 255, 255, 255), depth: int = 1) -> None:
         pg.draw.line(self.screen, color._get(), pos1._get(), pos2._get(), depth)
 
-    def drawRect(self, pos: vec2, width: int, height: int, color: rgb | rgba = rgba(255, 255, 255, 255), texturePath: None | str = None, *, colorkey: rgb | None = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255, border_radius: int = 0) -> None:
+    def drawRect(self, pos: vec2, width: int, height: int, color: rgb | rgba = rgba(255, 255, 255, 255), texturePath: None | str = None, *, scaled: bool = True, starting_point: vec2 | None = None, part_width: int = None, part_height: int = None, colorkey: rgb | None = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255, border_radius: int = 0) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(width, height, "tl")
         mask: pg.Surface = pg.Surface((width, height), pg.SRCALPHA)
@@ -376,7 +424,7 @@ class Window:
             else:
                 filtered = list(filter(lambda x: x == texture, initialized_textures))
                 texture = filtered[-1]
-            texture.convert(width, height)
+            texture.convert(width, height, scaled, starting_point, part_width, part_height)
             texture.rotate(rotation)
             if colorkey:
                 texture.set_colorkey(colorkey)
@@ -385,7 +433,7 @@ class Window:
         else:
             self.screen.blit(mask, topleft._get())
 
-    def drawCircle(self, pos: vec2, radius: int, color: rgb | rgba = rgba(255, 255, 255, 255), texturePath: None | str = None, *, colorkey: rgb | None = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
+    def drawCircle(self, pos: vec2, radius: int, color: rgb | rgba = rgba(255, 255, 255, 255), texturePath: None | str = None, *, scaled: bool = True, starting_point: vec2 | None = None, part_width: int = None, part_height: int = None, colorkey: rgb | None = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(radius * 2, radius * 2, "tl")
         mask: pg.Surface = pg.Surface((radius * 2, radius * 2), pg.SRCALPHA)
@@ -402,7 +450,7 @@ class Window:
             else:
                 filtered = list(filter(lambda x: x == texture, initialized_textures))
                 texture = filtered[-1]
-            texture.convert(radius*2, radius*2)
+            texture.convert(radius*2, radius*2, scaled, starting_point, part_width, part_height)
             texture.rotate(rotation)
             if colorkey:
                 texture.set_colorkey(colorkey)
@@ -411,7 +459,7 @@ class Window:
         else:
             self.screen.blit(mask, topleft._get())
 
-    def drawTriangle(self, pos: vec2, width: int, height: int, color: rgb | rgba = rgba(255, 255, 255, 255), texturePath: None | str = None, *, colorkey: rgb | None = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
+    def drawTriangle(self, pos: vec2, width: int, height: int, color: rgb | rgba = rgba(255, 255, 255, 255), texturePath: None | str = None, *, scaled: bool = True, starting_point: vec2 | None = None, part_width: int = None, part_height: int = None, colorkey: rgb | None = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(width, height, "tl")
         mask: pg.Surface = pg.Surface((width, height), pg.SRCALPHA)
@@ -428,7 +476,7 @@ class Window:
             else:
                 filtered = list(filter(lambda x: x == texture, initialized_textures))
                 texture = filtered[-1]
-            texture.convert(width, height)
+            texture.convert(width, height, scaled, starting_point, part_width, part_height)
             texture.rotate(rotation)
             if colorkey:
                 texture.set_colorkey(colorkey)
@@ -437,7 +485,7 @@ class Window:
         else:
             self.screen.blit(mask, topleft._get())
         
-    def drawTexture(self, pos: vec2, width: int, height: int, texturePath: str, *, colorkey: rgb | None = None, rotation: int = 0, transparency: int = 255) -> None:
+    def drawTexture(self, pos: vec2, width: int, height: int, texturePath: str, *, scaled: bool = True, starting_point: vec2 | None = None, part_width: int = None, part_height: int = None, colorkey: rgb | None = None, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(width, height, "tl")
         texture = Texture(texturePath)
@@ -447,7 +495,7 @@ class Window:
         else:
             filtered = list(filter(lambda x: x == texture, initialized_textures))
             texture = filtered[-1]
-        texture.convert(width, height)
+        texture.convert(width, height, scaled, starting_point, part_width, part_height)
         texture.rotate(rotation)
         if colorkey:
             texture.set_colorkey(colorkey)
@@ -477,7 +525,7 @@ class Window:
     def addButton(self, button: Button) -> None :
         self.visual_buttons.append(button)
         
-    def addInputField(self, field: InputField) -> None :
+    def addInputField(self, field: InputField) -> None:
         self.input_fields.append(field)
 
     def setClearColor(self, color: rgb) -> None:
@@ -524,7 +572,7 @@ class Window:
                             input._set_key(keys[event.key], True)
                             input._call_wasPressed(keys[event.key])
                             for field in self.input_fields:
-                                field._update(keys[event.key], input)
+                                field._update(keys[event.key], input, self.getMousePos( ))
                     escape = False
                     if isinstance(escape_sequence, str):
                         escape = input.isKeyPressed(escape_sequence)     
@@ -593,10 +641,9 @@ class Window:
                 ## so it can be cleared every miniute
                 if self.clear_update == 0:
                     initialized_texts.clear()
-                if self.clear_update > 0:
-                    self.clear_update -= 1
-                else:
                     self.clear_update = 60
+                elif self.clear_update > 0:
+                    self.clear_update -= 1
 
             pg.display.update() if not self.db else pg.display.flip()
             self.clock.tick(self.framerate)

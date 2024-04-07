@@ -265,8 +265,6 @@ class InputListener:
 
     def _set_key(self, key: str, isPressed: bool) -> None:
         self.keys_down[key] = isPressed
-        for field in self.input_fields:
-            field._update(key) 
         if isPressed:
             self.just_pressed_keys.append(key)
         else:
