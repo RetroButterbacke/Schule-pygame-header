@@ -14,13 +14,14 @@ class Texture:
     texture: pg.Surface = field(compare=False, init=False)
     original: pg.Surface = field(compare=False, init=False)
 
-    def load(self) -> None:
+    def load(self) -> bool:
         try:
             object.__setattr__(self, 'original', pg.image.load(self.filePath))
             object.__setattr__(self, 'texture', self.original)
+            return True
         except pg.error as e:
             print(f"Error loading texture: {e}")
-            sys.exit()
+            return False 
             
     def __load_tileTexture__(self, width: int = None, height: int = None) -> None:
         width = width or self.texture.get_width()
@@ -252,20 +253,25 @@ class Surface:
 
         mask = pg.transform.rotate(mask, -rotation)
 
+        tl = True
+        
         if texturePath != None:
             texture = Texture(texturePath)
             if not texture in initialized_textures:
-                texture.load()
+                tl = texture.load()
                 initialized_textures.append(texture)
             else:
                 filtered = list(filter(lambda x: x == texture, initialized_textures))
                 texture = filtered[-1]
-            texture.convert(width, height, scaled, starting_point, part_width, part_height)
-            texture.rotate(rotation)
-            if colorkey:
-                texture.set_colorkey(colorkey)
-            texture.apply(self.surf, mask, topleft, transparency)
-            texture.reset()
+            if tl:
+                texture.convert(width, height, scaled, starting_point, part_width, part_height)
+                texture.rotate(rotation)
+                if colorkey:
+                    texture.set_colorkey(colorkey)
+                texture.apply(self.surf, mask, topleft, transparency)
+                texture.reset()
+            else:
+               self.screen.blit(mask, topleft._get()) 
         else:
             self.surf.blit(mask, topleft._get())
 
@@ -278,20 +284,25 @@ class Surface:
 
         mask = pg.transform.rotate(mask, -rotation)
 
+        tl = True
+        
         if texturePath != None:
             texture = Texture(texturePath)
             if not texture in initialized_textures:
-                texture.load()
+                tl = texture.load()
                 initialized_textures.append(texture)
             else:
                 filtered = list(filter(lambda x: x == texture, initialized_textures))
                 texture = filtered[-1]
-            texture.convert(radius*2, radius*2, scaled, starting_point, part_width, part_height)
-            texture.rotate(rotation)
-            if colorkey:
-                texture.set_colorkey(colorkey)
-            texture.apply(self.surf, mask, topleft, transparency)
-            texture.reset()
+            if tl:
+                texture.convert(width, height, scaled, starting_point, part_width, part_height)
+                texture.rotate(rotation)
+                if colorkey:
+                    texture.set_colorkey(colorkey)
+                texture.apply(self.surf, mask, topleft, transparency)
+                texture.reset()
+            else:
+               self.screen.blit(mask, topleft._get()) 
         else:
             self.surf.blit(mask, topleft._get())
 
@@ -324,7 +335,9 @@ class Surface:
     def drawTexture(self, pos: vec2, width: int, height: int, texturePath: str, *, scaled: bool = True, starting_point: vec2 | None = None, part_width: int = None, part_height: int = None, colorkey: rgb | None = None, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(width, height, "tl")
+        
         texture = Texture(texturePath)
+        
         if not texture in initialized_textures:
             texture.load()
             initialized_textures.append(texture)
@@ -416,20 +429,25 @@ class Window:
 
         mask = pg.transform.rotate(mask, -rotation)
 
+        tl = True
+        
         if texturePath != None:
             texture = Texture(texturePath)
             if not texture in initialized_textures:
-                texture.load()
+                tl = texture.load()
                 initialized_textures.append(texture)
             else:
                 filtered = list(filter(lambda x: x == texture, initialized_textures))
                 texture = filtered[-1]
-            texture.convert(width, height, scaled, starting_point, part_width, part_height)
-            texture.rotate(rotation)
-            if colorkey:
-                texture.set_colorkey(colorkey)
-            texture.apply(self.screen, mask, topleft, transparency)
-            texture.reset()
+            if tl:
+                texture.convert(width, height, scaled, starting_point, part_width, part_height)
+                texture.rotate(rotation)
+                if colorkey:
+                    texture.set_colorkey(colorkey)
+                texture.apply(self.screen, mask, topleft, transparency)
+                texture.reset()
+            else:
+               self.screen.blit(mask, topleft._get()) 
         else:
             self.screen.blit(mask, topleft._get())
 
@@ -442,20 +460,25 @@ class Window:
 
         mask = pg.transform.rotate(mask, -rotation)
 
+        tl = True
+        
         if texturePath != None:
             texture = Texture(texturePath)
             if not texture in initialized_textures:
-                texture.load()
+                tl = texture.load()
                 initialized_textures.append(texture)
             else:
                 filtered = list(filter(lambda x: x == texture, initialized_textures))
                 texture = filtered[-1]
-            texture.convert(radius*2, radius*2, scaled, starting_point, part_width, part_height)
-            texture.rotate(rotation)
-            if colorkey:
-                texture.set_colorkey(colorkey)
-            texture.apply(self.screen, mask, topleft, transparency)
-            texture.reset()
+            if tl:
+                texture.convert(width, height, scaled, starting_point, part_width, part_height)
+                texture.rotate(rotation)
+                if colorkey:
+                    texture.set_colorkey(colorkey)
+                texture.apply(self.screen, mask, topleft, transparency)
+                texture.reset()
+            else:
+               self.screen.blit(mask, topleft._get()) 
         else:
             self.screen.blit(mask, topleft._get())
 
@@ -488,7 +511,9 @@ class Window:
     def drawTexture(self, pos: vec2, width: int, height: int, texturePath: str, *, scaled: bool = True, starting_point: vec2 | None = None, part_width: int = None, part_height: int = None, colorkey: rgb | None = None, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(width, height, "tl")
+        
         texture = Texture(texturePath)
+        
         if not texture in initialized_textures:
             texture.load()
             initialized_textures.append(texture)
