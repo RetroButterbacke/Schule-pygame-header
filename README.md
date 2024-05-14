@@ -1,5 +1,7 @@
 # Pygame Header
 
+This documentation was written at 12 pm of a school day so excuse the grammer mistakes. They will be fixed with the next update.
+
 ## Requirements
 ```
     python-3.7 min
@@ -71,6 +73,8 @@ def gameLoop():
     return
 
 window.starGameLoop(gameLoop, escape_sequence: Tuple[str, ...] | str, framerate: int, input: InputListener)
+
+quit()
 ```
 
 ## Classes
