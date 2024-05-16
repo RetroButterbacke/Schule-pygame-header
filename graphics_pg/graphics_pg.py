@@ -196,23 +196,6 @@ class Surface:
     def set_alpha(self, alpha: int) -> None:
         self.surf.set_alpha(alpha)
 
-   class Surface:
-    def __init__(self, width: int, height: int) -> None:
-        self.surf: pg.Surface = pg.Surface((width, height), pg.SRCALPHA)
-        self.ClearColor: rgb | rgba = rgba(0, 0, 0, 0)
-
-    def setClearColor(self, color: rgb | rgba) -> None:
-        self.ClearColor = color
-
-    def clear(self):
-        self.surf.fill(self.ClearColor._get())
-
-    def set_colorkey(self, colorkey: rgb) -> None:
-        self.surf.set_colorkey(colorkey._get())
-
-    def set_alpha(self, alpha: int) -> None:
-        self.surf.set_alpha(alpha)
-
     def drawLine(self, pos1: vec2, pos2: vec2, color: rgb | rgba = rgba(255, 255, 255, 255), depth: int = 1) -> None:
         pg.draw.line(self.surf, color._get(), pos1._get(), pos2._get(), depth)
 
@@ -243,7 +226,7 @@ class Surface:
                 texture.apply(self.surf, mask, topleft, transparency)
                 texture.reset()
             else:
-               self.screen.blit(mask, topleft._get()) 
+               self.surf.blit(mask, topleft._get()) 
         else:
             self.surf.blit(mask, topleft._get())
 
@@ -267,14 +250,14 @@ class Surface:
                 filtered = list(filter(lambda x: x == texture, initialized_textures))
                 texture = filtered[-1]
             if tl:
-                texture.convert(width, height, scaled, starting_point, part_width, part_height)
+                texture.convert(radius, radius, scaled, starting_point, part_width, part_height)
                 texture.rotate(rotation)
                 if colorkey:
                     texture.set_colorkey(colorkey)
                 texture.apply(self.surf, mask, topleft, transparency)
                 texture.reset()
             else:
-               self.screen.blit(mask, topleft._get()) 
+               self.surf.blit(mask, topleft._get()) 
         else:
             self.surf.blit(mask, topleft._get())
 
@@ -370,6 +353,7 @@ class Window:
         self.current: int = 0
         self.last_time: int = 0
         self.last_update: int = 0
+        self.clear_update: int = 60
         self.fps: float = 0
     
     def getDeltaTime(self) -> float:
@@ -441,7 +425,7 @@ class Window:
                 filtered = list(filter(lambda x: x == texture, initialized_textures))
                 texture = filtered[-1]
             if tl:
-                texture.convert(width, height, scaled, starting_point, part_width, part_height)
+                texture.convert(radius, radius, scaled, starting_point, part_width, part_height)
                 texture.rotate(rotation)
                 if colorkey:
                     texture.set_colorkey(colorkey)
@@ -615,7 +599,7 @@ class Window:
                         if button.isDrawn:
                             button._onClick(self.getMousePos())
 
-             if self.getTimeDiff() >= 1:
+            if self.getTimeDiff() >= 1:
                 self.fps = self.clock.get_fps()
                 self.last_update = self.current
                 # Clearing the text list so that it does not take to much memory
