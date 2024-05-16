@@ -271,7 +271,7 @@ class Surface:
                 texture.apply(self.surf, mask, topleft, transparency)
                 texture.reset()
             else:
-               self.screen.blit(mask, topleft._get()) 
+               self.surf.blit(mask, topleft._get()) 
         else:
             self.surf.blit(mask, topleft._get())
 
@@ -295,14 +295,14 @@ class Surface:
                 filtered = list(filter(lambda x: x == texture, initialized_textures))
                 texture = filtered[-1]
             if tl:
-                texture.convert(width, height, scaled, starting_point, part_width, part_height)
+                texture.convert(radius, radius, scaled, starting_point, part_width, part_height)
                 texture.rotate(rotation)
                 if colorkey:
                     texture.set_colorkey(colorkey)
                 texture.apply(self.surf, mask, topleft, transparency)
                 texture.reset()
             else:
-               self.screen.blit(mask, topleft._get()) 
+               self.surf.blit(mask, topleft._get()) 
         else:
             self.surf.blit(mask, topleft._get())
 
