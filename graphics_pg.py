@@ -692,6 +692,7 @@ class Window:
         self.current: int = 0
         self.last_time: int = 0
         self.last_update: int = 0
+        self.clear_update: int = 60
         self.fps: float = 0
     
     def getDeltaTime(self) -> float:
