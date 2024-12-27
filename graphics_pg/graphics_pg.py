@@ -286,7 +286,7 @@ class Surface:
     def drawTexture(self, pos: vec2, width: int, height: int, texturePath: str, *, colorkey: rgb | None = None, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(width, height, "tl")
-        if os.path.exists(texturePath)
+        if os.path.exists(texturePath):
             texture = Texture(texturePath)
             if not texture in initialized_textures:
                 texture.load()
@@ -446,7 +446,7 @@ class Window:
     def drawTexture(self, pos: vec2, width: int, height: int, texturePath: str, *, colorkey: rgb | None = None, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(width, height, "tl")
-        if os.path.exists(texturePath)
+        if os.path.exists(texturePath):
             texture = Texture(texturePath)
             if not texture in initialized_textures:
                 texture.load()
