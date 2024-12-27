@@ -5,6 +5,7 @@ from functools import reduce
 from dataclasses import dataclass, field
 import pygame as pg
 import sys
+import os
 
 @dataclass(frozen=True, eq=True)
 class Texture:
