@@ -164,7 +164,7 @@ class rgba:
     brightness: int
 
     def __post_init__(self) -> None:
-        brightness = 0.299 * self.red + 0.587 * self.green + 0.114 * self.blue
+        brightness = int(0.299 * self.red + 0.587 * self.green + 0.114 * self.blue)
         if self.red > 255 or self.red < 0:
             raise IndexError("Red value out of range. Range: 0..255")
         if self.green > 255 or self.green < 0:
@@ -187,7 +187,7 @@ class rgb:
     blue: int
 
     def __post_init__(self) -> None:
-        brightness = 0.299 * self.red + 0.587 * self.green + 0.114 * self.blue
+        brightness = int(0.299 * self.red + 0.587 * self.green + 0.114 * self.blue)
         if self.red > 255 or self.red < 0:
             raise IndexError("Red value out of range. Range: 0..255")
         if self.green > 255 or self.green < 0:
