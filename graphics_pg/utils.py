@@ -1,5 +1,5 @@
 import pygame as pg
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict, List, Tuple
 from math import sqrt
 from collections.abc import Callable
