@@ -161,7 +161,7 @@ class rgba:
     green: int
     blue: int
     alpha: int
-    brightness: int
+    brightness: int = field(compare=False, init=False)
 
     def __post_init__(self) -> None:
         brightness = int(0.299 * self.red + 0.587 * self.green + 0.114 * self.blue)
@@ -185,6 +185,7 @@ class rgb:
     red: int
     green: int
     blue: int
+    brightness: int = field(compare=False, init=False)
 
     def __post_init__(self) -> None:
         brightness = int(0.299 * self.red + 0.587 * self.green + 0.114 * self.blue)
