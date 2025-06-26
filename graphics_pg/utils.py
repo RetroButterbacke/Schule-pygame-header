@@ -161,8 +161,10 @@ class rgba:
     green: int
     blue: int
     alpha: int
+    brightness: int
 
     def __post_init__(self) -> None:
+        brightness = 0.299 * self.red + 0.587 * self.green + 0.114 * self.blue
         if self.red > 255 or self.red < 0:
             raise IndexError("Red value out of range. Range: 0..255")
         if self.green > 255 or self.green < 0:
@@ -172,6 +174,9 @@ class rgba:
         if self.alpha > 255 or self.alpha < 0:
             raise IndexError("Alpha value out of range. Range: 0..255")
 
+    def grayScale(self) -> rgb:
+        return rgb(self.brightness, self.brightness, self.brightness)
+    
     def _get(self) -> Tuple[int, int, int, int]:
         return (self.red, self.green, self.blue, self.alpha)
 
@@ -182,6 +187,7 @@ class rgb:
     blue: int
 
     def __post_init__(self) -> None:
+        brightness = 0.299 * self.red + 0.587 * self.green + 0.114 * self.blue
         if self.red > 255 or self.red < 0:
             raise IndexError("Red value out of range. Range: 0..255")
         if self.green > 255 or self.green < 0:
@@ -189,6 +195,9 @@ class rgb:
         if self.blue > 255 or self.blue < 0:
             raise IndexError("Blue value out of range. Range: 0..255")
 
+    def grayScale(self) -> rgb:
+        return rgb(self.brightness, self.brightness, self.brightness)
+    
     def _get(self) -> Tuple[int, int, int]:
         return (self.red, self.green, self.blue)
 
