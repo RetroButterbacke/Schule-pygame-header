@@ -174,7 +174,7 @@ class rgba:
         if self.alpha > 255 or self.alpha < 0:
             raise IndexError("Alpha value out of range. Range: 0..255")
 
-    def grayScale(self) -> rgb:
+    def grayScale(self) -> rgba:
         return rgb(self.brightness, self.brightness, self.brightness)
     
     def _get(self) -> Tuple[int, int, int, int]:
