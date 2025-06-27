@@ -190,11 +190,13 @@ class Surface:
         self.surf: pg.Surface = pg.Surface((width, height), pg.SRCALPHA)
         self.ClearColor: rgb | rgba = rgba(0, 0, 0, 0)
 
-    def fromPGSurface(self, surf: pg.Surface) -> None:
+    def fromPGSurface(self, surf: pg.Surface) -> 'Surface':
         self.surf = surf
+        return self
 
-    def setClearColor(self, color: rgb | rgba) -> None:
+    def setClearColor(self, color: rgb | rgba) -> 'Surface':
         self.ClearColor = color
+        return self
 
     def clear(self):
         self.surf.fill(self.ClearColor._get())
