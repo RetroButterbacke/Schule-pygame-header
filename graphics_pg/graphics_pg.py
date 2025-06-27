@@ -145,8 +145,11 @@ class Text:
     def size(self) -> Tuple[int, int]:
         return self.text_surface.get_size()
 
-    def get(self, width: int, height: int) -> pg.Surface:
+    def getScaled(self, width: int, height: int) -> pg.Surface:
         return pg.transform.scale(self.text_surface, (width, height))
+
+    def get(self) -> pg.Surface:
+        return self.text_surface
     
 class Button:
     def __init__(self, width: int, height: int, pos: vec2, label: None | str, runOnClick: Callable) -> None:
