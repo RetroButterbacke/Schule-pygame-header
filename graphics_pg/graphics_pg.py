@@ -36,8 +36,8 @@ class Texture:
         object.__setattr__(self, 'texture', result)
         
     def __load_texturePart__(self, start: vec2 = vec2(0, 0), width: int = None, height: int = None) -> None:
-        width = width or self.texture.get_width()
-        height = height or self.texture.get_height()
+        width = width or self.texture.get_width() - start.x
+        height = height or self.texture.get_height() - start.y
         
         if not (0 <= start.x < self.texture.get_width() and 0 <= start.y < self.texture.get_height()):
             raise IndexError("Starting position is out of range")
