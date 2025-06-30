@@ -155,8 +155,11 @@ class Text:
     def size(self) -> Tuple[int, int]:
         return self.text_surface.get_size()
 
-    def get(self, width: int, height: int) -> pg.Surface:
+    def getScaled(self, width: int, height: int) -> pg.Surface:
         return pg.transform.scale(self.text_surface, (width, height))
+
+    def get(self) -> pg.Surface:
+        return self.text_surface
 
 class TextBox:
     def __init__(self, width: int, height: int, pos: vec2, fontStyle: str | None, label: str | None, runOnFocus: Callable | None = None) -> None:
