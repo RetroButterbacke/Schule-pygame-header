@@ -162,7 +162,7 @@ class Text:
         return self.text_surface
 
 class TextBox:
-    def __init__(self, width: int, height: int, pos: vec2, fontStyle: str | None, label: str | None, runOnFocus: Callable | None = None) -> None:
+    def __init__(self, width: int, height: int, pos: vec2, fontStyle: str | None, label: str | None, runOnFocus: Callable | None = None, runOnInput: Callable | None = None) -> None:
         topleft = pos.convert(width, height, "tl")
         bottomright = pos.convert(width, height, "br")
         self.range = pg.Rect(topleft.x, topleft.y, bottomright.x - topleft.x, bottomright.y - topleft.y)
@@ -193,6 +193,10 @@ class TextBox:
             self.isInFocus = False
         if self.isInFocus and self.runOnFocus:
             self.runOnFocus()
+
+    def process(self) -> None:
+        if self.runOnInput:
+            self.runOnInput()
 
     def clear(self):
         self.text = []
@@ -635,6 +639,7 @@ class Window:
                                          if key == "BACKSPACE":
                                             box.depend()
                                          elif key == "RETURN" or key == "ESCAPE":
+                                            box.process()
                                             box._setFocused(False)
                                          elif key.__contains__("SHIFT") or key.__contains__("CTRL") or key.__contains__("ALT") or key == "TAB":
                                             continue 
