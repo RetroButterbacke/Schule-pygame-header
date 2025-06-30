@@ -177,6 +177,7 @@ class TextBox:
         self.borderDepth = 0
         self.fontSize = 12
         self.runOnFocus = runOnFocus
+        self.runOnInput = runOnInput
         self.isInFocus: bool = False
         self.isDrawn: bool = False
         # For drawing
