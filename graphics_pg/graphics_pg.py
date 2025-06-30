@@ -162,7 +162,7 @@ class Text:
         return self.text_surface
 
 class TextBox:
-    def __init__(self, width: int, height: int, pos: vec2, fontStyle: str | None, label: str | None, runOnFocus: Callable | None = None, runOnInput: Callable[str] | None = None) -> None:
+    def __init__(self, width: int, height: int, pos: vec2, fontStyle: str | None, label: str | None, runOnFocus: Callable | None = None, runOnInput: Callable[[str], None] | None = None) -> None:
         topleft = pos.convert(width, height, "tl")
         bottomright = pos.convert(width, height, "br")
         self.range = pg.Rect(topleft.x, topleft.y, bottomright.x - topleft.x, bottomright.y - topleft.y)
