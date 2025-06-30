@@ -413,7 +413,7 @@ class Surface:
             text_instance = filtered[-1]
         text_instance.set_alpha(transparency)
         text_instance.rotate(rotation)
-        self.surf.blit(text_instance.get(width - ((width // 2) // 4), height - ((height // 2) // 4)), vec2(topleft.x + ((width // 2) // 4) // 2, topleft.y + ((height // 2) // 4) // 2)._get())
+        self.surf.blit(text_instance.getScaled(width - ((width // 2) // 4), height - ((height // 2) // 4)), vec2(topleft.x + ((width // 2) // 4) // 2, topleft.y + ((height // 2) // 4) // 2)._get())
 
     def drawSurface(self, topleft: vec2, surface: 'Surface') -> None:
         self.surf.blit(surface._get(), topleft._get())
@@ -576,7 +576,7 @@ class Window:
             text_instance = filtered[-1]
         text_instance.set_alpha(transparency)
         text_instance.rotate(rotation)
-        self.screen.blit(text_instance.get(width - ((width // 2) // 4), height - ((height // 2) // 4)), vec2(topleft.x + ((width // 2) // 4) // 2, topleft.y + ((height // 2) // 4) // 2)._get())
+        self.screen.blit(text_instance.getScaled(width - ((width // 2) // 4), height - ((height // 2) // 4)), vec2(topleft.x + ((width // 2) // 4) // 2, topleft.y + ((height // 2) // 4) // 2)._get())
 
     def drawSurface(self, topleft: vec2, surface: 'Surface') -> None:
         self.screen.blit(surface._get(), topleft._get())
