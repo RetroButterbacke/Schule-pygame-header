@@ -1,11 +1,11 @@
 from collections.abc import Callable
+from datetime import datetime
 from .utils import *
 from typing import List, Tuple, Dict
 from functools import reduce
 from dataclasses import dataclass, field
 import pygame as pg
 import sys
-import os
 
 @dataclass(frozen=True, eq=True)
 class Texture:
@@ -23,9 +23,9 @@ class Texture:
             object.__setattr__(self, 'texture', self.original)
         except pg.error as e:
             print(f"Error loading texture: {e}")
-            quit()
+            sys.exit()
             
-    def __load_tileTexture__(self, width: int = None, height: int = None) -> None:
+    def __load_tileTexture__(self, width: int | None = None, height: int | None = None) -> None:
         width = width or self.texture.get_width()
         height = height or self.texture.get_height()
         
@@ -35,9 +35,9 @@ class Texture:
                 result.blit(self.texture, (x, y))
         object.__setattr__(self, 'texture', result)
         
-    def __load_texturePart__(self, start: vec2 = vec2(0, 0), width: int = None, height: int = None) -> None:
-        width = width or self.texture.get_width() - start.x
-        height = height or self.texture.get_height() - start.y
+    def __load_texturePart__(self, start: vec2 = vec2(0, 0), width: int | None = None, height: int | None = None) -> None:
+        width = width or self.texture.get_width()
+        height = height or self.texture.get_height()
         
         if not (0 <= start.x < self.texture.get_width() and 0 <= start.y < self.texture.get_height()):
             raise IndexError("Starting position is out of range")
@@ -52,7 +52,7 @@ class Texture:
     def reset(self) -> None:
         object.__setattr__(self, 'texture', self.original)
 
-    def convert(self, width: int, height: int, scaled: bool = True, starting_point: vec2 | None = None, part_width: int = None, part_height: int = None) -> None:
+    def convert(self, width: int, height: int, scaled: bool = True, starting_point: vec2 | None = None, part_width: int | None = None, part_height: int | None = None) -> None:
         if not self.loaded.get((scaled, starting_point, part_width, part_height), None):
             if scaled:
                 if starting_point:
@@ -111,7 +111,7 @@ def getFontSize(text: str, font_style: None | str, width: int, height: int) -> i
         mid = (low + high) // 2
         font = pg.font.Font(pg.font.match_font(font_style), mid) if font_style else pg.font.Font(None, mid)
         text_surface = font.render(text, False, (0, 0, 0, 0))
-        
+        from matplotlib import font_manager
         if text_surface.get_width() <= width and text_surface.get_height() <= height:
             font_size = mid
             low = mid + 1
@@ -129,12 +129,23 @@ class Text:
     text_surface: pg.Surface = field(init=False, compare=False)
     loaded: bool = field(init=False, compare=False, default=False)
 
-    def load(self, width: int, height: int, color: rgb | rgba) -> None:
+    def load(self, fontSize: int, color: rgb | rgba) -> None:
+        if not self.loaded:
+            font = pg.font.Font(pg.font.match_font(self.style), fontSize) if self.style else pg.font.Font(None, fontSize)
+            object.__setattr__(self, 'text_surface', font.render(self.text, False, color._get()))
+            object.__setattr__(self, 'loaded', True) 
+
+    def loadSize(self, width: int, height: int, color: rgb | rgba) -> None:
         if not self.loaded:
             font_size = getFontSize(self.text, self.style, width, height)
             font = pg.font.Font(pg.font.match_font(self.style), font_size) if self.style else pg.font.Font(None, font_size)
+            object.__setattr__(self, 'size', font.size(self.text))
             object.__setattr__(self, 'text_surface', font.render(self.text, False, color._get()))
             object.__setattr__(self, 'loaded', True)
+
+    def getSize(self, fontSize: int) -> Tuple[int, int]:
+        font = pg.font.Font(pg.font.match_font(self.style), fontSize) if self.style else pg.font.Font(None, fontSize)
+        return font.size(self.text)
 
     def set_alpha(self, alpha: int = 255) -> None:
         self.text_surface.set_alpha(alpha)
@@ -145,11 +156,92 @@ class Text:
     def size(self) -> Tuple[int, int]:
         return self.text_surface.get_size()
 
-    def getScaled(self, width: int, height: int) -> pg.Surface:
+    def get(self, width: int, height: int) -> pg.Surface:
         return pg.transform.scale(self.text_surface, (width, height))
 
-    def get(self) -> pg.Surface:
-        return self.text_surface
+class TextBox:
+    def __init__(self, width: int, height: int, pos: vec2, fontStyle: str | None, label: str | None, runOnFocus: Callable | None = None) -> None:
+        topleft = pos.convert(width, height, "tl")
+        bottomright = pos.convert(width, height, "br")
+        self.range = pg.Rect(topleft.x, topleft.y, bottomright.x - topleft.x, bottomright.y - topleft.y)
+        self.width = width
+        self.height = height
+        self.pos = pos
+        self.topx = topleft.x
+        self.topy = topleft.y
+        self.label = label
+        self.text: List[str] = []
+        self.fontStyle = fontStyle
+        self.borderDepth = 0
+        self.fontSize = 12
+        self.runOnFocus = runOnFocus
+        self.isInFocus: bool = False
+        self.isDrawn: bool = False
+        # For drawing
+        self.threshold: int = 1000
+        self.isCursor: bool = True
+        self.lastTime: int = pg.time.get_ticks()
+
+    def _setFocused(self, focus: bool | vec2):
+        if type(focus) is bool:
+            self.isInFocus = focus
+        elif self.range.collidepoint(*focus._get()):
+            self.isInFocus = True
+        else:
+            self.isInFocus = False
+        if self.isInFocus and self.runOnFocus:
+            self.runOnFocus()
+
+    def clear(self):
+        self.text = []
+
+    def append(self, char: str) -> None:
+        if self.isInFocus:
+            out = ""
+            for c in self.text:
+                out += c
+            out += char
+            font = pg.font.Font(pg.font.match_font(self.fontStyle), self.fontSize) if self.fontStyle else pg.font.Font(None, self.fontSize)
+            width, _ = font.size(out)
+            if width > self.width:
+                return
+            self.text.append(char)
+
+    def depend(self) -> None:
+        if len(self.text) > 0 and self.isInFocus:
+            self.text.pop()
+
+    def draw(self, window: 'Window', fontSize: int = 12, fontColor: rgb | rgba = rgb(0, 0, 0), labelColor: rgb | rgba = rgb(150, 150, 150), backColor: rgb | rgba = rgb(255, 255, 255), borderColor: rgb | rgba = rgb(91, 184, 238), borderDepth: int = 2, cursorThreshold: int = 1000) -> None:
+        font = pg.font.Font(pg.font.match_font(self.fontStyle), self.fontSize) if self.fontStyle else pg.font.Font(None, self.fontSize)
+        _, height = font.size("|")
+        if height > self.height:
+            print("Can't draw bigger than the textbox")
+            return
+        self.isDrawn = True
+        self.borderDepth = borderDepth
+        self.fontSize = fontSize
+        self.threshold = cursorThreshold
+        window.drawRect(self.pos, self.width, self.height, color=backColor)
+        window.drawRect(self.pos, self.width, self.height, color=borderColor, lineDepth=borderDepth)
+        if self.label and len(self.text) == 0:
+            lwidth, lheight = font.size(self.label)
+            window.drawText(vec2(self.pos.x, self.pos.y), lwidth, lheight, self.label, fontStyle="Arial", color=labelColor)
+        out = ""
+        for c in self.text:
+            out += c
+        font = pg.font.Font(pg.font.match_font(self.fontStyle), self.fontSize) if self.fontStyle else pg.font.Font(None, self.fontSize)
+        txtwidth, _ = font.size(out)
+        if self.isCursor and not txtwidth >= self.width and self.isInFocus:
+            out += "|"
+        else:
+            out += " "
+        txtwidth, txtheight = font.size(out)
+        if len(out.replace(" ", "")) - 1 >= 0:
+            window.drawText(vec2(self.pos.x, self.pos.y), txtwidth, txtheight, out, fontStyle="Arial")
+        current = pg.time.get_ticks()
+        if current - self.lastTime >= self.threshold:
+            self.isCursor = not self.isCursor
+            self.lastTime = current
     
 class Button:
     def __init__(self, width: int, height: int, pos: vec2, label: None | str, runOnClick: Callable) -> None:
@@ -193,13 +285,8 @@ class Surface:
         self.surf: pg.Surface = pg.Surface((width, height), pg.SRCALPHA)
         self.ClearColor: rgb | rgba = rgba(0, 0, 0, 0)
 
-    def fromPGSurface(self, surf: pg.Surface) -> 'Surface':
-        self.surf = surf
-        return self
-
-    def setClearColor(self, color: rgb | rgba) -> 'Surface':
+    def setClearColor(self, color: rgb | rgba) -> None:
         self.ClearColor = color
-        return self
 
     def clear(self):
         self.surf.fill(self.ClearColor._get())
@@ -222,7 +309,7 @@ class Surface:
 
         mask = pg.transform.rotate(mask, -rotation)
 
-        if texturePath != None and os.path.exists(texturePath):
+        if texturePath != None:
             texture = Texture(texturePath)
             if not texture in initialized_textures:
                 texture.load()
@@ -234,10 +321,10 @@ class Surface:
             texture.rotate(rotation)
             if colorkey:
                 texture.set_colorkey(colorkey)
-            texture.apply(self.screen, mask, topleft, transparency)
+            texture.apply(self.surf, mask, topleft, transparency)
             texture.reset()
         else:
-            self.screen.blit(mask, topleft._get())
+            self.surf.blit(mask, topleft._get())
 
     def drawCircle(self, pos: vec2, radius: int, color: rgb | rgba = rgba(255, 255, 255, 255), texturePath: None | str = None, *, colorkey: rgb | None = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_textures
@@ -248,7 +335,7 @@ class Surface:
 
         mask = pg.transform.rotate(mask, -rotation)
 
-        if texturePath != None and os.path.exists(texturePath):
+        if texturePath != None:
             texture = Texture(texturePath)
             if not texture in initialized_textures:
                 texture.load()
@@ -260,10 +347,10 @@ class Surface:
             texture.rotate(rotation)
             if colorkey:
                 texture.set_colorkey(colorkey)
-            texture.apply(self.screen, mask, topleft, transparency)
+            texture.apply(self.surf, mask, topleft, transparency)
             texture.reset()
         else:
-            self.screen.blit(mask, topleft._get())
+            self.surf.blit(mask, topleft._get())
 
     def drawTriangle(self, pos: vec2, width: int, height: int, color: rgb | rgba = rgba(255, 255, 255, 255), texturePath: None | str = None, *, colorkey: rgb | None = None, lineDepth: int = 0, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_textures
@@ -274,7 +361,7 @@ class Surface:
 
         mask = pg.transform.rotate(mask, -rotation)
 
-        if texturePath != None and os.path.exists(texturePath):
+        if texturePath != None:
             texture = Texture(texturePath)
             if not texture in initialized_textures:
                 texture.load()
@@ -286,27 +373,26 @@ class Surface:
             texture.rotate(rotation)
             if colorkey:
                 texture.set_colorkey(colorkey)
-            texture.apply(self.screen, mask, topleft, transparency)
+            texture.apply(self.surf, mask, topleft, transparency)
             texture.reset()
         else:
-            self.screen.blit(mask, topleft._get())
+            self.surf.blit(mask, topleft._get())
         
     def drawTexture(self, pos: vec2, width: int, height: int, texturePath: str, *, colorkey: rgb | None = None, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(width, height, "tl")
-        if os.path.exists(texturePath):
-            texture = Texture(texturePath)
-            if not texture in initialized_textures:
-                texture.load()
-                initialized_textures.append(texture)
-            else:
-                filtered = list(filter(lambda x: x == texture, initialized_textures))
-                texture = filtered[-1]
+        texture = Texture(texturePath)
+        if not texture in initialized_textures:
+            texture.load()
+            initialized_textures.append(texture)
+        else:
+            filtered = list(filter(lambda x: x == texture, initialized_textures))
+            texture = filtered[-1]
         texture.convert(width, height)
         texture.rotate(rotation)
         if colorkey:
             texture.set_colorkey(colorkey)
-        texture.apply(self.screen, self.screen, topleft, transparency)
+        texture.apply(self.surf, self.surf, topleft, transparency)
         texture.reset()
 
     def drawText(self, pos: vec2, width: int, height: int, text: str, color: rgb | rgba = rgba(0, 0, 0, 255), fontStyle: None | str = None, *, rotation: int = 0, transparency: int = 255) -> None:
@@ -314,7 +400,7 @@ class Surface:
         topleft: vec2 = pos.convert(width, height, "tl")
         text_instance: Text = Text(text, fontStyle)
         if not text_instance in initialized_texts:
-            text_instance.load(self.surf.get_width(), self.surf.get_height(), color)
+            text_instance.loadSize(self.surf.get_width(), self.surf.get_height(), color)
             initialized_texts.append(text_instance)
         else:
             filtered = list(filter(lambda x: x == text_instance, initialized_texts))
@@ -349,6 +435,7 @@ class Window:
         self.drawHitboxes: bool = False
 
         self.visual_buttons: List[Button] = []
+        self.textboxes: List[TextBox] = []
 
         self.escape_sequence: Tuple[str, ...] | str = "ESCAPE"
         self.framerate: int = 60
@@ -360,6 +447,9 @@ class Window:
     
     def getDeltaTime(self) -> float:
         return (self.current - self.last_time) / 1000
+    
+    def getTimeDiff(self) -> float:
+        return(self.current - self.last_update) / 1000
 
     def getFPS(self) -> int:
         return int(self.fps)
@@ -382,7 +472,7 @@ class Window:
 
         mask = pg.transform.rotate(mask, -rotation)
 
-        if texturePath != None and os.path.exists(texturePath):
+        if texturePath != None:
             texture = Texture(texturePath)
             if not texture in initialized_textures:
                 texture.load()
@@ -408,7 +498,7 @@ class Window:
 
         mask = pg.transform.rotate(mask, -rotation)
 
-        if texturePath != None and os.path.exists(texturePath):
+        if texturePath != None:
             texture = Texture(texturePath)
             if not texture in initialized_textures:
                 texture.load()
@@ -434,7 +524,7 @@ class Window:
 
         mask = pg.transform.rotate(mask, -rotation)
 
-        if texturePath != None and os.path.exists(texturePath):
+        if texturePath != None:
             texture = Texture(texturePath)
             if not texture in initialized_textures:
                 texture.load()
@@ -454,14 +544,13 @@ class Window:
     def drawTexture(self, pos: vec2, width: int, height: int, texturePath: str, *, colorkey: rgb | None = None, rotation: int = 0, transparency: int = 255) -> None:
         global initialized_textures
         topleft: vec2 = pos.convert(width, height, "tl")
-        if os.path.exists(texturePath):
-            texture = Texture(texturePath)
-            if not texture in initialized_textures:
-                texture.load()
-                initialized_textures.append(texture)
-            else:
-                filtered = list(filter(lambda x: x == texture, initialized_textures))
-                texture = filtered[-1]
+        texture = Texture(texturePath)
+        if not texture in initialized_textures:
+            texture.load()
+            initialized_textures.append(texture)
+        else:
+            filtered = list(filter(lambda x: x == texture, initialized_textures))
+            texture = filtered[-1]
         texture.convert(width, height)
         texture.rotate(rotation)
         if colorkey:
@@ -474,7 +563,7 @@ class Window:
         topleft: vec2 = pos.convert(width, height, "tl")
         text_instance: Text = Text(text, fontStyle)
         if not text_instance in initialized_texts:
-            text_instance.load(self.screen.get_width(), self.screen.get_height(), color)
+            text_instance.loadSize(self.screen.get_width(), self.screen.get_height(), color)
             initialized_texts.append(text_instance)
         else:
             filtered = list(filter(lambda x: x == text_instance, initialized_texts))
@@ -491,6 +580,9 @@ class Window:
 
     def addButton(self, button: Button) -> None :
         self.visual_buttons.append(button)
+
+    def addTextBox(self, textBox: TextBox) -> None:
+        self.textboxes.append(textBox)
 
     def setClearColor(self, color: rgb) -> None:
         self.ClearColor = color
@@ -529,6 +621,23 @@ class Window:
                         if event.key in keys:
                             input._set_key(keys[event.key], True)
                             input._call_wasPressed(keys[event.key])
+                        if input:
+                            for box in self.textboxes:
+                                if box.isInFocus:
+                                    key = keys[event.key] if keys.__contains__(event.key) else None
+                                    if key:
+                                         if key == "BACKSPACE":
+                                            box.depend()
+                                         elif key == "RETURN" or key == "ESCAPE":
+                                            box._setFocused(False)
+                                         elif key.__contains__("SHIFT") or key.__contains__("CTRL") or key.__contains__("ALT") or key == "TAB":
+                                            continue 
+                                         elif key == "SPACE":
+                                            box.append(" ")
+                                         elif input.isKeyPressed("LEFT SHIFT") or input.isKeyPressed("RIGHT SHIFT"):
+                                            box.append(key)
+                                         else:
+                                            box.append(key.lower()) 
                     escape = False
                     if isinstance(escape_sequence, str):
                         escape = input.isKeyPressed(escape_sequence)     
@@ -586,8 +695,11 @@ class Window:
                     for button in self.visual_buttons:
                         if button.isDrawn:
                             button._onClick(self.getMousePos())
+                    for box in self.textboxes:
+                        if box.isDrawn:
+                            box._setFocused(self.getMousePos())
 
-            if self.getDeltaTime() >= 1:
+            if self.getTimeDiff() >= 1:
                 self.fps = self.clock.get_fps()
                 self.last_update = self.current
 
@@ -611,4 +723,4 @@ def quit() -> None:
     global initialized
     if initialized:
         pg.quit()
-    sys.exit()
+        sys.exit()
