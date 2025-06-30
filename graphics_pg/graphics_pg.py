@@ -139,7 +139,6 @@ class Text:
         if not self.loaded:
             font_size = getFontSize(self.text, self.style, width, height)
             font = pg.font.Font(pg.font.match_font(self.style), font_size) if self.style else pg.font.Font(None, font_size)
-            object.__setattr__(self, 'size', font.size(self.text))
             object.__setattr__(self, 'text_surface', font.render(self.text, False, color._get()))
             object.__setattr__(self, 'loaded', True)
 
