@@ -469,7 +469,8 @@ class Window:
         return self.fps
 
     def getAt(self, x: int, y: int) -> 'rgba':
-        return self.screen.get_at([x,y])
+        col = self.screen.get_at([x,y])
+        return rgba(col[0], col[1], col[2], col[3] if len(col) == 4 else 255)
     
     def setFrameRate(self, rate: int) -> None:
         self.framerate = rate
