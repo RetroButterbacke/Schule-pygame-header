@@ -467,6 +467,12 @@ class Window:
     
     def getLiteralFPS(self) -> float:
         return self.fps
+
+    def getAt(self, x: int, y: int) -> 'rgba':
+        return self.surf.get_at([x,y])
+
+    def setAt(self, x: int, y: int, col: rgb | rgba) -> None:
+        self.surf.set_at([x, y], [col.red, col.green, col.blue, col.alpha if type(col) is rgba else 255]
     
     def setFrameRate(self, rate: int) -> None:
         self.framerate = rate
