@@ -469,7 +469,7 @@ class Window:
         return self.fps
 
     def getAt(self, x: int, y: int) -> 'rgba':
-        return self.surf.get_at([x,y])
+        return self.screen.get_at([x,y])
     
     def setFrameRate(self, rate: int) -> None:
         self.framerate = rate
