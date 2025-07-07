@@ -299,6 +299,16 @@ class Surface:
     def setClearColor(self, color: rgb | rgba) -> None:
         self.ClearColor = color
 
+    def get_width(self) -> int:
+        return self.surf.get_width()
+
+    def get_height(self) -> int:
+        return self.surf.get_height()
+
+    def getAt(self, x: int, y: int) -> 'rgba':
+        col = self.surf.get_at([x,y])
+        return rgba(col[0], col[1], col[2], col[3] if len(col) == 4 else 255)
+
     def clear(self):
         self.surf.fill(self.ClearColor._get())
 
